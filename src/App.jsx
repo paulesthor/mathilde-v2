@@ -10,6 +10,7 @@ import Creations from './pages/Creations';
 import Dispo from './pages/Dispo';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import AdminReviews from './pages/AdminReviews';
 
 // Placeholder Pages
 
@@ -37,6 +38,7 @@ function App() {
             <Route path="/dispo" element={<Dispo />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/admin/reviews" element={<AdminReviews />} />
           </Routes>
         </main>
 

@@ -43,7 +43,19 @@ export default function MinimalModal({ isOpen, onClose, item }) {
                         </div>
                     )}
                     {item.price && (
-                        <p className="mt-12 font-editorial text-4xl">{item.price}</p>
+                        <div className="mt-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-t border-foreground/10 pt-8">
+                            <p className="font-editorial text-4xl">{item.price}</p>
+                            {item.paymentLink && (
+                                <a
+                                    href={item.paymentLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block bg-primary hover:bg-primary/95 text-white font-mono text-xs uppercase tracking-widest text-center px-8 py-4 transition-colors"
+                                >
+                                    Acheter en ligne
+                                </a>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>

@@ -29,9 +29,8 @@ const prestationsData = [
         description: "Des créations textiles personnalisées pour parfaire votre décoration et apporter du confort à chaque recoin de votre intérieur.",
         details: [
             "Coussins décoratifs",
-            "Banettes de fenêtres",
             "Têtes de lit tapissées",
-            "Jetés de lit",
+            "Projets personnalisés",
         ]
     }
 ];

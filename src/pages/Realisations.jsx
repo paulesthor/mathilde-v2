@@ -1,27 +1,42 @@
 import { useState } from 'react';
 import MinimalModal from '../components/UI/MinimalModal';
+import piece1 from '../assets/piece_1.png';
+import piece2 from '../assets/piece_2.png';
+import piece3 from '../assets/piece_3.png';
 
 const realisationsData = [
     {
         id: 1,
-        title: "Fauteuil Voltaire",
-        image: "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=1200",
-        description: "Restauration complète de l'assise avec une garniture traditionnelle. Contraste fort entre le bois noir goudron et le tissu floral exubérant de la maison Pierre Frey.",
-        details: ["Garniture traditionnelle", "Tissu Pierre Frey", "Clous apparents noirs"]
+        title: "Pièces sans fin",
+        image: piece1,
+        description: "J’aime recevoir mes amis et ma famille. Très vite, le cercle des convives s’agrandit et les places viennent à manquer autour de la table basse. L’idée de la colonne de tabourets empilables est née : à l’arrivée des invités, il suffit de les descendre pour que chacun trouve sa place. Ces tabourets sont habillés de tissus aux couleurs vives. Les motifs qui les ornent sont obtenus par un jeu d’empiècements textiles. Une fois les invités repartis, les tabourets reprennent leur forme sculpturale. Empilés en colonne, ils évoquent la Colonne sans fin de Constantin Brancusi. Pour ce projet sur le thème de l’Art Déco, j’ai choisi de m’éloigner des modèles existants pour concevoir un meuble original, modulable et pensé pour s’adapter aux petits espaces.",
+        details: [
+            "Structure bois par Victor Chastant",
+            "Tissu Highlander (Clarke & Clarke)",
+            "Découpe laser au Miiido de Bliiida"
+        ]
     },
     {
         id: 2,
-        title: "Chaises Médaillon",
-        image: "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&q=80&w=1200",
-        description: "Le bois brut contrastant avec un luxueux velours de mohair bleu profond. Une réinterprétation minimaliste d'un grand classique Louis XVI.",
-        details: ["Aérogommage bois brut", "Velours Mohair", "Passepoil ton sur ton"]
+        title: "Bridge Allison",
+        image: piece2,
+        description: "J’adore les audacieux qui mettent leurs mains devant les yeux, ceux qui doutent, mais qui se jettent quand même à l’eau. Ceux qui ont peur de se tromper, mais qui se disent YOLO. On a des points communs, c’est sûrement pour ça qu’ils me font confiance. Un jour, la propriétaire de ce bridge a osé. Vraiment osé : une belle serviette de bain, une agrafeuse de bureau… et hop, fauteuil retapissé. Le résultat n’était pas si mal, mais ce beau bridge méritait mieux. Adieu la serviette de plage : aujourd'hui, il se pare de ce superbe tissu au style Memphis, pile à la hauteur de son audace ✨",
+        details: [
+            "Style Memphis rétro et graphique",
+            "Tissu Odyssée de chez Camengo",
+            "Structure bois restaurée"
+        ]
     },
     {
         id: 3,
-        title: "Banquette Napoléon III",
-        image: "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?auto=format&fit=crop&q=80&w=1200",
-        description: "Création d'une assise sur mesure. Le tissu géométrique structure cette pièce ancienne et l'ancre résolument dans l'époque contemporaine.",
-        details: ["Mousse HR", "Tissu géométrique Dedar"]
+        title: "Bridges Pauline",
+        image: piece3,
+        description: "Le léopard, on en voit partout… Réveillez le tigre qui est en vous ! Restauration de fauteuils vintage avec réfection complète et tissu ultra coloré. Le bois a été conservé, l'assise a été refaite, et surtout ce tissu complètement fou de chez Clarke&Clarke transforme ces fauteuils en véritables pièces de décoration fortes.",
+        details: [
+            "Assises refaites à neuf",
+            "Tissu graphique Clarke & Clarke",
+            "Structure en bois conservée et sublimée"
+        ]
     },
 ];
 
