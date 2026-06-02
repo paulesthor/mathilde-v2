@@ -55,12 +55,7 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                         ))}
                     </nav>
 
-                    {/* Admin section */}
-                    <div className="flex items-center gap-6 border-t border-foreground/10 pt-6 w-full max-w-md justify-center lg:justify-start">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Admin:</span>
-                        <Link to="/admin/products" onClick={onClose} className="font-mono text-[10px] uppercase tracking-widest hover:text-primary transition-colors">Catalogue</Link>
-                        <Link to="/admin/reviews" onClick={onClose} className="font-mono text-[10px] uppercase tracking-widest hover:text-primary transition-colors">Avis</Link>
-                    </div>
+                    <div /> {/* Bottom placeholder */}
                 </div>
             </div>
         </div>

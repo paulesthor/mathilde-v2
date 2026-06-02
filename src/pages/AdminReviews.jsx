@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { Check, X, Trash, ArrowRight, MessageSquare, Star, Database } from 'lucide-react';
 
@@ -14,6 +15,8 @@ export default function AdminReviews() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
     const [isUsingMock, setIsUsingMock] = useState(false);
+    const navigate = useNavigate();
+
     
     // Add reviews form state
     const [newAuthor, setNewAuthor] = useState('');
@@ -165,9 +168,35 @@ export default function AdminReviews() {
         return r.status === filter;
     });
 
+    const handleLogout = async () => {
+        if (isUsingMock) {
+            localStorage.removeItem('gesta_admin_logged_in');
+            navigate('/');
+        } else {
+            await supabase.auth.signOut();
+            navigate('/');
+        }
+    };
+
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-screen pt-32 pb-24 text-foreground">
             <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
+
+                {/* Internal Admin Navigation Bar */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted/20 border border-border/50 px-6 py-4 rounded-lg mb-12 text-xs font-mono">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                        <span className="font-bold text-primary tracking-widest uppercase">Gesta Admin</span>
+                        <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+                        <Link to="/admin/products" className="hover:text-primary transition-colors text-muted-foreground hover:underline underline-offset-4">Catalogue</Link>
+                        <Link to="/admin/reviews" className="hover:text-primary transition-colors font-bold underline underline-offset-4">Modération Avis</Link>
+                    </div>
+                    <button 
+                        onClick={handleLogout}
+                        className="text-muted-foreground hover:text-rose-500 transition-colors uppercase tracking-wider text-[10px]"
+                    >
+                        Se déconnecter
+                    </button>
+                </div>
                 
                 <header className="mb-16 border-b border-border/40 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>

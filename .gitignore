@@ -34,3 +34,5 @@ build_err.log
 build_log.txt
 error.txt
 ui-ux-pro-max-skill-main/
+supabase/.temp/
+
