@@ -20,7 +20,7 @@ export default function AdminProducts() {
     const [price, setPrice] = useState('');
     const [quantity, setQuantity] = useState('1');
     const [description, setDescription] = useState('');
-    const [imageUrl, setImageUrl] = useState('');
+    const [imageFile, setImageFile] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
     const fetchProducts = async () => {
@@ -129,15 +129,26 @@ export default function AdminProducts() {
 
         const parsedPrice = parseFloat(price);
 
+        let uploadedImageUrl = "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=1200";
+
         if (isUsingMock) {
-            // Simulation mode: automatically create a fake Stripe link
+            if (imageFile) {
+                // Read local file as base64 for simulation offline
+                const reader = new FileReader();
+                const base64Promise = new Promise((resolve) => {
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(imageFile);
+                });
+                uploadedImageUrl = await base64Promise;
+            }
+
             const newProduct = {
                 id: Date.now().toString(),
                 title,
                 price: parsedPrice,
                 quantity: parseInt(quantity) || 1,
                 description,
-                image_url: imageUrl || "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=1200",
+                image_url: uploadedImageUrl,
                 status: 'available',
                 stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", // using our working test link as mock!
                 created_at: new Date().toISOString()
@@ -151,9 +162,30 @@ export default function AdminProducts() {
             setPrice('');
             setQuantity('1');
             setDescription('');
-            setImageUrl('');
+            setImageFile(null);
+            const fileInput = document.getElementById('image-upload-input');
+            if (fileInput) fileInput.value = '';
         } else {
             try {
+                if (imageFile) {
+                    console.log("Uploading image to Supabase Storage...");
+                    const fileExt = imageFile.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    const filePath = `${fileName}`;
+
+                    const { error: uploadError } = await supabase.storage
+                        .from('products')
+                        .upload(filePath, imageFile);
+
+                    if (uploadError) throw new Error("Erreur de téléversement photo : " + uploadError.message);
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('products')
+                        .getPublicUrl(filePath);
+                    
+                    uploadedImageUrl = publicUrl;
+                }
+
                 // Call Supabase Edge Function to generate Stripe link
                 console.log("Calling Edge Function create-stripe-link...");
                 const { data: stripeData, error: funcError } = await supabase.functions.invoke('create-stripe-link', {
@@ -161,7 +193,7 @@ export default function AdminProducts() {
                         title,
                         price: parsedPrice,
                         description,
-                        image_url: imageUrl || undefined,
+                        image_url: uploadedImageUrl,
                         quantity_limit: parseInt(quantity) || undefined
                     }
                 });
@@ -176,7 +208,7 @@ export default function AdminProducts() {
                         price: parsedPrice,
                         quantity: parseInt(quantity) || 1,
                         description,
-                        image_url: imageUrl || "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=1200",
+                        image_url: uploadedImageUrl,
                         stripe_payment_link: stripeData.payment_link,
                         stripe_product_id: stripeData.stripe_product_id,
                         status: 'available'
@@ -190,7 +222,9 @@ export default function AdminProducts() {
                 setPrice('');
                 setQuantity('1');
                 setDescription('');
-                setImageUrl('');
+                setImageFile(null);
+                const fileInput = document.getElementById('image-upload-input');
+                if (fileInput) fileInput.value = '';
             } catch (err) {
                 alert("Erreur lors de la création : " + err.message + "\n\nNote : Assurez-vous que l'Edge Function 'create-stripe-link' est déployée et configurée.");
             } finally {
@@ -306,14 +340,15 @@ export default function AdminProducts() {
 
                                 <div>
                                     <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                                        Lien de la photo
+                                        Photo du produit *
                                     </label>
                                     <input
-                                        type="url"
-                                        value={imageUrl}
-                                        onChange={(e) => setImageUrl(e.target.value)}
-                                        className="w-full bg-background border border-border px-4 py-3 font-sans text-sm focus:border-primary outline-none transition-colors"
-                                        placeholder="https://images.unsplash.com/..."
+                                        type="file"
+                                        id="image-upload-input"
+                                        accept="image/*"
+                                        required
+                                        onChange={(e) => setImageFile(e.target.files[0])}
+                                        className="w-full bg-background border border-border px-4 py-3 font-sans text-sm focus:border-primary outline-none transition-colors cursor-pointer file:mr-4 file:py-1 file:px-3 file:border-0 file:text-[10px] file:font-mono file:uppercase file:bg-primary file:text-white file:hover:bg-primary/95"
                                     />
                                 </div>
 
