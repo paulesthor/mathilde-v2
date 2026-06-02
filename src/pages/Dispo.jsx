@@ -9,7 +9,7 @@ const dispoData = [
         image: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000",
         description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.",
         details: ["Années 1970", "Bouclette écru", "L 60 x P 70 x H 75 cm"],
-        paymentLink: "https://buy.stripe.com/test_6oE01K8w28Rkd68"
+        paymentLink: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00"
     },
     {
         id: 2,
@@ -18,7 +18,7 @@ const dispoData = [
         image: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000",
         description: "Paire de fauteuils bridge fifties. Le contraste entre le chêne clair et le velours forêt met en valeur l'architecture des sièges.",
         details: ["Années 1950", "Chêne massif", "Velours forêt"],
-        paymentLink: "https://buy.stripe.com/test_8wM6q86nUaZsfe0"
+        paymentLink: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00"
     },
     {
         id: 3,
@@ -27,7 +27,7 @@ const dispoData = [
         image: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000",
         description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.",
         details: ["Laiton vintage", "Plissé main", "H 45 cm"],
-        paymentLink: "https://buy.stripe.com/test_5kA5m47rY1wSb20"
+        paymentLink: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00"
     }
 ];
 
