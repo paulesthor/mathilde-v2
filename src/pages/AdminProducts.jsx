@@ -9,6 +9,55 @@ const DEFAULT_PRODUCTS = [
     { id: '3', title: "Lampe Abat-jour Plissé", price: 180, quantity: 1, description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.", image_url: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() }
 ];
 
+const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.75) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth || height > maxHeight) {
+                    if (width > height) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob) {
+                            reject(new Error("Image compression failed"));
+                            return;
+                        }
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
+
 export default function AdminProducts() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,6 +71,10 @@ export default function AdminProducts() {
     const [description, setDescription] = useState('');
     const [imageFile, setImageFile] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    
+    // Compression states
+    const [isCompressing, setIsCompressing] = useState(false);
+    const [wasCompressed, setWasCompressed] = useState(false);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -352,25 +405,55 @@ export default function AdminProducts() {
 
                                 <div>
                                     <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                                        Photo du produit * (Max 5 Mo)
+                                        Photo du produit *
                                     </label>
                                     <input
                                         type="file"
                                         id="image-upload-input"
                                         accept="image/*"
                                         required
-                                        onChange={(e) => {
+                                        onChange={async (e) => {
                                             const file = e.target.files[0];
-                                            if (file && file.size > 5 * 1024 * 1024) { // 5 MB
-                                                alert("La photo est trop lourde (maximum 5 Mo). Veuillez compresser l'image avant de l'envoyer.");
-                                                e.target.value = ''; // Reset input
+                                            if (!file) return;
+
+                                            if (file.size > 20 * 1024 * 1024) {
+                                                alert("La photo d'origine dépasse la limite absolue de 20 Mo. Veuillez choisir une image plus petite.");
+                                                e.target.value = '';
                                                 setImageFile(null);
+                                                setWasCompressed(false);
                                                 return;
                                             }
-                                            setImageFile(file);
+
+                                            if (file.size > 1.2 * 1024 * 1024) { // > 1.2 MB
+                                                setIsCompressing(true);
+                                                setWasCompressed(false);
+                                                try {
+                                                    const compressed = await compressImage(file);
+                                                    setImageFile(compressed);
+                                                    setWasCompressed(true);
+                                                } catch (err) {
+                                                    console.error("Image compression error:", err);
+                                                    setImageFile(file); // Fallback to original
+                                                } finally {
+                                                    setIsCompressing(false);
+                                                }
+                                            } else {
+                                                setImageFile(file);
+                                                setWasCompressed(false);
+                                            }
                                         }}
                                         className="w-full bg-background border border-border px-4 py-3 font-sans text-sm focus:border-primary outline-none transition-colors cursor-pointer file:mr-4 file:py-1 file:px-3 file:border-0 file:text-[10px] file:font-mono file:uppercase file:bg-primary file:text-white file:hover:bg-primary/95"
                                     />
+                                    {isCompressing && (
+                                        <p className="font-mono text-[9px] uppercase text-amber-500 mt-2 animate-pulse">
+                                            ✓ Optimisation de la photo en arrière-plan...
+                                        </p>
+                                    )}
+                                    {wasCompressed && (
+                                        <p className="font-mono text-[9px] uppercase text-emerald-500 mt-2">
+                                            ✓ La photo a dû être compressée (poids réduit pour un chargement optimal)
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
