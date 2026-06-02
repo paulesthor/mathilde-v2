@@ -109,6 +109,18 @@ export default function AdminProducts() {
             }
 
             try {
+                // Find product to delete its image from storage first
+                const product = products.find(p => p.id === id);
+                if (product && product.image_url && product.image_url.includes('/storage/v1/object/public/products/')) {
+                    const fileName = product.image_url.split('/products/').pop();
+                    if (fileName) {
+                        console.log("Deleting associated image from storage:", fileName);
+                        await supabase.storage
+                            .from('products')
+                            .remove([fileName]);
+                    }
+                }
+
                 const { error } = await supabase
                     .from('products')
                     .delete()
@@ -340,14 +352,23 @@ export default function AdminProducts() {
 
                                 <div>
                                     <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                                        Photo du produit *
+                                        Photo du produit * (Max 5 Mo)
                                     </label>
                                     <input
                                         type="file"
                                         id="image-upload-input"
                                         accept="image/*"
                                         required
-                                        onChange={(e) => setImageFile(e.target.files[0])}
+                                        onChange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (file && file.size > 5 * 1024 * 1024) { // 5 MB
+                                                alert("La photo est trop lourde (maximum 5 Mo). Veuillez compresser l'image avant de l'envoyer.");
+                                                e.target.value = ''; // Reset input
+                                                setImageFile(null);
+                                                return;
+                                            }
+                                            setImageFile(file);
+                                        }}
                                         className="w-full bg-background border border-border px-4 py-3 font-sans text-sm focus:border-primary outline-none transition-colors cursor-pointer file:mr-4 file:py-1 file:px-3 file:border-0 file:text-[10px] file:font-mono file:uppercase file:bg-primary file:text-white file:hover:bg-primary/95"
                                     />
                                 </div>
