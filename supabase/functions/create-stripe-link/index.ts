@@ -23,7 +23,7 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     })
 
-    const { title, price, description, image_url } = await req.json()
+    const { title, price, description, image_url, quantity_limit } = await req.json()
 
     if (!title || !price) {
       throw new Error('Le titre et le prix sont obligatoires.')
@@ -44,7 +44,8 @@ serve(async (req) => {
       currency: 'eur',
     })
 
-    // 3. Création du lien de paiement
+    // 3. Création du lien de paiement avec restriction de quantité si fournie
+    const limitVal = quantity_limit ? parseInt(quantity_limit) : undefined
     const paymentLink = await stripe.paymentLinks.create({
       line_items: [
         {
@@ -52,6 +53,11 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
+      restrictions: limitVal && Number.isInteger(limitVal) && limitVal > 0 ? {
+        completed_sessions: {
+          limit: limitVal,
+        },
+      } : undefined,
     })
 
     return new Response(

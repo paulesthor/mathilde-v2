@@ -4,9 +4,9 @@ import { supabase } from '../utils/supabaseClient';
 import { Check, Trash, Plus, Archive, Star, Database, Sparkles, ShoppingBag } from 'lucide-react';
 
 const DEFAULT_PRODUCTS = [
-    { id: '1', title: "Chauffeuse 70s", price: 450, description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.", image_url: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() },
-    { id: '2', title: "Paire de Bridge", price: 890, description: "Paire de fauteuils bridge fifties. Le contraste entre le chêne clair et le velours forêt met en valeur l'architecture des sièges.", image_url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() },
-    { id: '3', title: "Lampe Abat-jour Plissé", price: 180, description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.", image_url: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() }
+    { id: '1', title: "Chauffeuse 70s", price: 450, quantity: 1, description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.", image_url: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() },
+    { id: '2', title: "Paire de Bridge", price: 890, quantity: 1, description: "Paire de fauteuils bridge fifties. Le contraste entre le chêne clair et le velours forêt met en valeur l'architecture des sièges.", image_url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() },
+    { id: '3', title: "Lampe Abat-jour Plissé", price: 180, quantity: 1, description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.", image_url: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() }
 ];
 
 export default function AdminProducts() {
@@ -15,10 +15,10 @@ export default function AdminProducts() {
     const [isUsingMock, setIsUsingMock] = useState(false);
     const navigate = useNavigate();
 
-
     // Form fields
     const [title, setTitle] = useState('');
     const [price, setPrice] = useState('');
+    const [quantity, setQuantity] = useState('1');
     const [description, setDescription] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -135,6 +135,7 @@ export default function AdminProducts() {
                 id: Date.now().toString(),
                 title,
                 price: parsedPrice,
+                quantity: parseInt(quantity) || 1,
                 description,
                 image_url: imageUrl || "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=1200",
                 status: 'available',
@@ -148,6 +149,7 @@ export default function AdminProducts() {
             setSubmitting(false);
             setTitle('');
             setPrice('');
+            setQuantity('1');
             setDescription('');
             setImageUrl('');
         } else {
@@ -159,7 +161,8 @@ export default function AdminProducts() {
                         title,
                         price: parsedPrice,
                         description,
-                        image_url: imageUrl || undefined
+                        image_url: imageUrl || undefined,
+                        quantity_limit: parseInt(quantity) || undefined
                     }
                 });
 
@@ -171,6 +174,7 @@ export default function AdminProducts() {
                     .insert([{
                         title,
                         price: parsedPrice,
+                        quantity: parseInt(quantity) || 1,
                         description,
                         image_url: imageUrl || "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=1200",
                         stripe_payment_link: stripeData.payment_link,
@@ -184,6 +188,7 @@ export default function AdminProducts() {
                 fetchProducts();
                 setTitle('');
                 setPrice('');
+                setQuantity('1');
                 setDescription('');
                 setImageUrl('');
             } catch (err) {
@@ -285,6 +290,22 @@ export default function AdminProducts() {
 
                                 <div>
                                     <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+                                        Quantité en vente (Stock) *
+                                    </label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="1"
+                                        step="1"
+                                        value={quantity}
+                                        onChange={(e) => setQuantity(e.target.value)}
+                                        className="w-full bg-background border border-border px-4 py-3 font-sans text-sm focus:border-primary outline-none transition-colors"
+                                        placeholder="Ex: 1"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                                         Lien de la photo
                                     </label>
                                     <input
@@ -362,10 +383,15 @@ export default function AdminProducts() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex justify-between items-baseline mb-2">
-                                                <h3 className="font-editorial text-2xl">{product.title}</h3>
-                                                <span className="font-mono text-sm font-semibold">{product.price} €</span>
-                                            </div>
+                                             <div className="flex justify-between items-baseline mb-2">
+                                                 <h3 className="font-editorial text-2xl">{product.title}</h3>
+                                                 <div className="flex flex-col items-end">
+                                                     <span className="font-mono text-sm font-semibold">{product.price} €</span>
+                                                     {product.quantity !== undefined && product.quantity !== null && (
+                                                         <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground mt-1">Stock : {product.quantity}</span>
+                                                     )}
+                                                 </div>
+                                             </div>
                                             <p className="font-sans font-light text-xs text-muted-foreground line-clamp-2 mb-4">
                                                 {product.description || "Aucune description fournie."}
                                             </p>
