@@ -32,7 +32,9 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                 </div>
 
                 {/* Navigation Links */}
-                <div className="flex h-[calc(100vh-6rem)] flex-col items-center justify-center p-6 text-center lg:items-start lg:text-left lg:pl-32">
+                <div className="flex h-[calc(100vh-6rem)] flex-col items-center justify-between p-6 text-center lg:items-start lg:text-left lg:pl-32 pb-16 pt-8">
+                    <div /> {/* Top spacer to center navigation */}
+                    
                     <nav className="flex flex-col space-y-6 md:space-y-8">
                         {navLinks.map((link, idx) => (
                             <Link
@@ -52,6 +54,13 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                             </Link>
                         ))}
                     </nav>
+
+                    {/* Admin section */}
+                    <div className="flex items-center gap-6 border-t border-foreground/10 pt-6 w-full max-w-md justify-center lg:justify-start">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Admin:</span>
+                        <Link to="/admin/products" onClick={onClose} className="font-mono text-[10px] uppercase tracking-widest hover:text-primary transition-colors">Catalogue</Link>
+                        <Link to="/admin/reviews" onClick={onClose} className="font-mono text-[10px] uppercase tracking-widest hover:text-primary transition-colors">Avis</Link>
+                    </div>
                 </div>
             </div>
         </div>
