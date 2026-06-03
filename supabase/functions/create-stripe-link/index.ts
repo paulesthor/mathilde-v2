@@ -95,7 +95,7 @@ serve(async (req) => {
       currency: 'eur',
     })
 
-    // 3. Payment link with optional quantity restriction
+    // 3. Payment link with optional quantity restriction and customer details collection
     const paymentLink = await stripe.paymentLinks.create({
       line_items: [
         {
@@ -103,6 +103,12 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
+      phone_number_collection: {
+        enabled: true,
+      },
+      shipping_address_collection: {
+        allowed_countries: ['FR', 'BE', 'CH', 'LU', 'DE', 'IT', 'ES', 'NL', 'IE', 'GB'],
+      },
       restrictions: limitVal && Number.isInteger(limitVal) && limitVal > 0 ? {
         completed_sessions: {
           limit: limitVal,
