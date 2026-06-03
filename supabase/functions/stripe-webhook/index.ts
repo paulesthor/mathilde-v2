@@ -51,11 +51,19 @@ serve(async (req) => {
       
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+      // Extract customer details and shipping address
+      const customerName = session.customer_details?.name || ''
+      const customerEmail = session.customer_details?.email || ''
+      const customerPhone = session.customer_details?.phone || ''
+      const shippingAddress = session.shipping_details?.address || session.customer_details?.address || null
+      const amountTotal = (session.amount_total || 0) / 100
+
       for (const item of lineItems.data) {
         const stripeProductId = item.price?.product as string
+        const productTitle = item.description || 'Meuble d\'atelier'
+        
         if (stripeProductId) {
-          // Atomic decrement using PostgreSQL RPC
-          // This avoids race conditions with concurrent purchases
+          // 1. Atomic decrement using PostgreSQL RPC
           const { error: rpcError } = await supabase.rpc('decrement_product_quantity', {
             p_stripe_product_id: stripeProductId
           })
@@ -79,6 +87,25 @@ serve(async (req) => {
                 .update({ quantity: newQuantity, status: newStatus })
                 .eq('id', product.id)
             }
+          }
+
+          // 2. Insert order details in orders table
+          const { error: orderError } = await supabase
+            .from('orders')
+            .insert([{
+              stripe_session_id: session.id,
+              customer_name: customerName,
+              customer_email: customerEmail,
+              customer_phone: customerPhone,
+              shipping_address: shippingAddress,
+              amount_total: amountTotal,
+              product_title: productTitle,
+              stripe_product_id: stripeProductId,
+              status: 'paid'
+            }])
+
+          if (orderError) {
+            console.error(`Failed to register order for session ${session.id}:`, orderError.message)
           }
         }
       }

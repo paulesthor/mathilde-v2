@@ -189,6 +189,7 @@ export default function AdminReviews() {
                         <span className="font-bold text-primary tracking-widest uppercase">Gesta Admin</span>
                         <span className="text-muted-foreground/30 hidden sm:inline">|</span>
                         <Link to="/admin/products" className="hover:text-primary transition-colors text-muted-foreground hover:underline underline-offset-4">Catalogue</Link>
+                        <Link to="/admin/orders" className="hover:text-primary transition-colors text-muted-foreground hover:underline underline-offset-4">Commandes</Link>
                         <Link to="/admin/reviews" className="hover:text-primary transition-colors font-bold underline underline-offset-4">Modération Avis</Link>
                     </div>
                     <button 
