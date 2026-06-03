@@ -22,6 +22,7 @@ export default function Home() {
     const [rating, setRating] = useState(5);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [lastSubmitTime, setLastSubmitTime] = useState(0); // Anti-spam rate limit
 
     useEffect(() => {
         const loadReviews = async () => {
@@ -34,7 +35,7 @@ export default function Home() {
 
                 const { data, error } = await supabase
                     .from('reviews')
-                    .select('*')
+                    .select('id, author_name, content, rating, source, status')
                     .eq('status', 'approved')
                     .order('created_at', { ascending: false });
                 
@@ -48,8 +49,7 @@ export default function Home() {
                         if (parsed.length > 0) setReviews(parsed);
                     }
                 }
-            } catch (err) {
-                console.warn("Fallback local storage:", err.message);
+            } catch {
                 const localData = localStorage.getItem('gesta_reviews');
                 if (localData) {
                     const parsed = JSON.parse(localData).filter(r => r.status === 'approved');
@@ -63,7 +63,26 @@ export default function Home() {
     const handleSubmitReview = async (e) => {
         e.preventDefault();
         if (!authorName || !content) return;
+        
+        // Anti-spam: rate limit 1 submission per 30 seconds
+        const now = Date.now();
+        if (now - lastSubmitTime < 30000) {
+            alert("Veuillez patienter avant d'envoyer un autre avis.");
+            return;
+        }
+        
+        // Content validation
+        if (authorName.length > 100) {
+            alert("Le nom est trop long (max 100 caractères).");
+            return;
+        }
+        if (content.length < 10 || content.length > 1000) {
+            alert("L'avis doit contenir entre 10 et 1000 caractères.");
+            return;
+        }
+        
         setIsSubmitting(true);
+        setLastSubmitTime(now);
 
         const newReview = {
             author_name: authorName,

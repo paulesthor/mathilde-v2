@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { Check, X, Trash, ArrowRight, MessageSquare, Star, Database } from 'lucide-react';
 
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+
 const MOCK_REVIEWS = [
     { id: '1', author_name: "Pauline R.", content: "Un travail remarquable sur mes bridges vintage. Le tissu est sublime et les finitions irréprochables. Une véritable artiste !", rating: 5, status: "approved", source: "local", created_at: new Date().toISOString() },
     { id: '2', author_name: "Victor C.", content: "La colonne de tabourets est devenue la pièce maîtresse de notre salon. Esthétique, ingénieuse et colorée.", rating: 5, status: "pending", source: "local", created_at: new Date().toISOString() },
@@ -28,30 +30,25 @@ export default function AdminReviews() {
     const fetchReviews = async () => {
         setLoading(true);
         try {
-            // Check if credentials exist before calling Supabase
-            const envUrl = import.meta.env.VITE_SUPABASE_URL;
-            const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-            
-            if (!envUrl || !envKey) {
-                throw new Error("Variables .env manquantes");
+            if (MOCK_ENABLED) {
+                throw new Error("Mode simulation activé");
             }
 
             const { data, error } = await supabase
                 .from('reviews')
-                .select('*')
+                .select('id, author_name, content, rating, status, source, created_at')
                 .order('created_at', { ascending: false });
                 
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                // Populate table if empty
                 const { error: insertError } = await supabase
                     .from('reviews')
                     .insert(MOCK_REVIEWS);
                 if (!insertError) {
                     const { data: refetched } = await supabase
                         .from('reviews')
-                        .select('*')
+                        .select('id, author_name, content, rating, status, source, created_at')
                         .order('created_at', { ascending: false });
                     setReviews(refetched || []);
                 } else {
@@ -62,15 +59,19 @@ export default function AdminReviews() {
             }
             setIsUsingMock(false);
         } catch (err) {
-            console.warn("Using fallback local storage:", err.message);
-            const localData = localStorage.getItem('gesta_reviews');
-            if (localData) {
-                setReviews(JSON.parse(localData));
+            if (MOCK_ENABLED) {
+                const localData = localStorage.getItem('gesta_reviews');
+                if (localData) {
+                    setReviews(JSON.parse(localData));
+                } else {
+                    localStorage.setItem('gesta_reviews', JSON.stringify(MOCK_REVIEWS));
+                    setReviews(MOCK_REVIEWS);
+                }
+                setIsUsingMock(true);
             } else {
-                localStorage.setItem('gesta_reviews', JSON.stringify(MOCK_REVIEWS));
-                setReviews(MOCK_REVIEWS);
+                setReviews([]);
+                setIsUsingMock(false);
             }
-            setIsUsingMock(true);
         } finally {
             setLoading(false);
         }
@@ -169,7 +170,7 @@ export default function AdminReviews() {
     });
 
     const handleLogout = async () => {
-        if (isUsingMock) {
+        if (MOCK_ENABLED) {
             localStorage.removeItem('gesta_admin_logged_in');
             navigate('/');
         } else {

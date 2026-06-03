@@ -3,10 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { Check, Trash, Plus, Archive, Star, Database, Sparkles, ShoppingBag } from 'lucide-react';
 
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 const DEFAULT_PRODUCTS = [
-    { id: '1', title: "Chauffeuse 70s", price: 450, quantity: 1, description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.", image_url: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() },
-    { id: '2', title: "Paire de Bridge", price: 890, quantity: 1, description: "Paire de fauteuils bridge fifties. Le contraste entre le chêne clair et le velours forêt met en valeur l'architecture des sièges.", image_url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() },
-    { id: '3', title: "Lampe Abat-jour Plissé", price: 180, quantity: 1, description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.", image_url: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", created_at: new Date().toISOString() }
+    { id: '1', title: "Chauffeuse 70s", price: 450, quantity: 1, description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.", image_url: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() },
+    { id: '2', title: "Paire de Bridge", price: 890, quantity: 1, description: "Paire de fauteuils bridge fifties. Le contraste entre le chêne clair et le velours forêt met en valeur l'architecture des sièges.", image_url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() },
+    { id: '3', title: "Lampe Abat-jour Plissé", price: 180, quantity: 1, description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.", image_url: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() }
 ];
 
 const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.75) => {
@@ -79,29 +83,25 @@ export default function AdminProducts() {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const envUrl = import.meta.env.VITE_SUPABASE_URL;
-            const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-            
-            if (!envUrl || !envKey) {
-                throw new Error("Variables .env manquantes");
+            if (MOCK_ENABLED) {
+                throw new Error("Mode simulation activé");
             }
 
             const { data, error } = await supabase
                 .from('products')
-                .select('*')
+                .select('id, title, price, quantity, description, image_url, stripe_payment_link, stripe_product_id, status, created_at')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                // Populate database with defaults if empty
                 const { error: insertError } = await supabase
                     .from('products')
                     .insert(DEFAULT_PRODUCTS.map(({ id, ...rest }) => rest));
                 if (!insertError) {
                     const { data: refetched } = await supabase
                         .from('products')
-                        .select('*')
+                        .select('id, title, price, quantity, description, image_url, stripe_payment_link, stripe_product_id, status, created_at')
                         .order('created_at', { ascending: false });
                     setProducts(refetched || []);
                 } else {
@@ -112,15 +112,20 @@ export default function AdminProducts() {
             }
             setIsUsingMock(false);
         } catch (err) {
-            console.warn("Using fallback local storage for products:", err.message);
-            const localData = localStorage.getItem('gesta_products');
-            if (localData) {
-                setProducts(JSON.parse(localData));
+            if (MOCK_ENABLED) {
+                const localData = localStorage.getItem('gesta_products');
+                if (localData) {
+                    setProducts(JSON.parse(localData));
+                } else {
+                    localStorage.setItem('gesta_products', JSON.stringify(DEFAULT_PRODUCTS));
+                    setProducts(DEFAULT_PRODUCTS);
+                }
+                setIsUsingMock(true);
             } else {
-                localStorage.setItem('gesta_products', JSON.stringify(DEFAULT_PRODUCTS));
-                setProducts(DEFAULT_PRODUCTS);
+                // In production, show error instead of falling back to insecure mock mode
+                setProducts([]);
+                setIsUsingMock(false);
             }
-            setIsUsingMock(true);
         } finally {
             setLoading(false);
         }
@@ -167,7 +172,6 @@ export default function AdminProducts() {
                 if (product && product.image_url && product.image_url.includes('/storage/v1/object/public/products/')) {
                     const fileName = product.image_url.split('/products/').pop();
                     if (fileName) {
-                        console.log("Deleting associated image from storage:", fileName);
                         await supabase.storage
                             .from('products')
                             .remove([fileName]);
@@ -198,7 +202,6 @@ export default function AdminProducts() {
 
         if (isUsingMock) {
             if (imageFile) {
-                // Read local file as base64 for simulation offline
                 const reader = new FileReader();
                 const base64Promise = new Promise((resolve) => {
                     reader.onloadend = () => resolve(reader.result);
@@ -215,7 +218,7 @@ export default function AdminProducts() {
                 description,
                 image_url: uploadedImageUrl,
                 status: 'available',
-                stripe_payment_link: "https://buy.stripe.com/test_8x24gB6Qa35M4t1fp20RG00", // using our working test link as mock!
+                stripe_payment_link: "#",
                 created_at: new Date().toISOString()
             };
             const updated = [newProduct, ...products];
@@ -233,7 +236,10 @@ export default function AdminProducts() {
         } else {
             try {
                 if (imageFile) {
-                    console.log("Uploading image to Supabase Storage...");
+                    // Validate MIME type before upload
+                    if (!ALLOWED_IMAGE_TYPES.includes(imageFile.type)) {
+                        throw new Error("Format non supporté. Utilisez JPG, PNG ou WebP.");
+                    }
                     const fileExt = imageFile.name.split('.').pop();
                     const fileName = `${Date.now()}.${fileExt}`;
                     const filePath = `${fileName}`;
@@ -252,7 +258,6 @@ export default function AdminProducts() {
                 }
 
                 // Call Supabase Edge Function to generate Stripe link
-                console.log("Calling Edge Function create-stripe-link...");
                 const { data: stripeData, error: funcError } = await supabase.functions.invoke('create-stripe-link', {
                     body: {
                         title,
@@ -299,7 +304,7 @@ export default function AdminProducts() {
     };
 
     const handleLogout = async () => {
-        if (isUsingMock) {
+        if (MOCK_ENABLED) {
             localStorage.removeItem('gesta_admin_logged_in');
             navigate('/');
         } else {
@@ -378,7 +383,7 @@ export default function AdminProducts() {
                                     <input
                                         type="number"
                                         required
-                                        min="0"
+                                        min="1"
                                         step="0.01"
                                         value={price}
                                         onChange={(e) => setPrice(e.target.value)}
@@ -410,7 +415,7 @@ export default function AdminProducts() {
                                     <input
                                         type="file"
                                         id="image-upload-input"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/webp"
                                         required
                                         onChange={async (e) => {
                                             const file = e.target.files[0];

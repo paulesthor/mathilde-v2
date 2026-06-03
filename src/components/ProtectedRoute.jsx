@@ -2,18 +2,17 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+
 export default function ProtectedRoute({ children }) {
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const envUrl = import.meta.env.VITE_SUPABASE_URL;
-        const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-        if (!envUrl || !envKey) {
-            // Simulation Mode: check localStorage
+        if (MOCK_ENABLED) {
+            // Simulation Mode: only active if explicitly enabled via env var
             const loggedIn = localStorage.getItem('gesta_admin_logged_in') === 'true';
-            setSession(loggedIn ? { user: { email: 'admin@gesta.fr' } } : null);
+            setSession(loggedIn ? { user: { email: 'simulation@local' } } : null);
             setLoading(false);
         } else {
             // Live Mode: check Supabase session

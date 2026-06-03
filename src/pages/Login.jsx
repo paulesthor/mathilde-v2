@@ -3,23 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { KeyRound, Mail, AlertCircle, Database } from 'lucide-react';
 
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isUsingMock, setIsUsingMock] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const envUrl = import.meta.env.VITE_SUPABASE_URL;
-        const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        if (!envUrl || !envKey) {
-            setIsUsingMock(true);
-        }
-
-        // If already logged in, redirect directly to admin products
-        if (!envUrl || !envKey) {
+        if (MOCK_ENABLED) {
             if (localStorage.getItem('gesta_admin_logged_in') === 'true') {
                 navigate('/admin/products');
             }
@@ -35,13 +29,13 @@ export default function Login() {
         setError('');
         setLoading(true);
 
-        if (isUsingMock) {
-            // Mock authentication
-            if (email === 'admin@gesta.fr' && password === 'admin') {
+        if (MOCK_ENABLED) {
+            // Mock authentication — only active in dev with VITE_ENABLE_MOCK=true
+            if (email && password) {
                 localStorage.setItem('gesta_admin_logged_in', 'true');
                 navigate('/admin/products');
             } else {
-                setError("Identifiants incorrects (Mode Simulation : utilisez admin@gesta.fr / admin)");
+                setError("Veuillez remplir tous les champs.");
             }
             setLoading(false);
         } else {
@@ -125,12 +119,11 @@ export default function Login() {
                     </button>
                 </form>
 
-                {isUsingMock && (
+                {MOCK_ENABLED && (
                     <div className="mt-8 pt-6 border-t border-border/40 flex items-center gap-3 bg-amber-500/5 border border-amber-500/10 px-4 py-3 rounded-lg text-amber-600 dark:text-amber-400">
                         <Database className="h-4 w-4 shrink-0" />
                         <div className="font-mono text-[9px] uppercase tracking-wider leading-relaxed">
-                            Mode Simulation hors ligne.<br />
-                            Identifiants : <span className="font-bold">admin@gesta.fr</span> / <span className="font-bold">admin</span>
+                            Mode Simulation hors ligne activé.
                         </div>
                     </div>
                 )}

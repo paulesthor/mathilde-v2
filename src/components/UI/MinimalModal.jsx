@@ -49,7 +49,7 @@ export default function MinimalModal({ isOpen, onClose, item }) {
                     {formattedPrice && (
                         <div className="mt-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-t border-foreground/10 pt-8">
                             <p className="font-editorial text-4xl">{formattedPrice}</p>
-                            {paymentLink && (
+                            {paymentLink && (paymentLink.startsWith('https://buy.stripe.com/') || paymentLink.startsWith('https://checkout.stripe.com/')) && (
                                 <a
                                     href={paymentLink}
                                     target="_blank"
