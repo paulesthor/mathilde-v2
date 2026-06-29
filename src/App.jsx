@@ -14,6 +14,7 @@ import Contact from './pages/Contact';
 import AdminReviews from './pages/AdminReviews';
 import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
+import AdminContacts from './pages/AdminContacts';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
             <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
             <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+            <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
           </Routes>
         </main>
 
