@@ -84,6 +84,16 @@ serve(async (req) => {
       }
     }
 
+    // 3. Push notification (fire-and-forget)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    if (supabaseUrl) {
+      fetch(`${supabaseUrl}/functions/v1/send-push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+        body: JSON.stringify({ title: 'Nouvelle demande de devis', body: `${firstName} ${lastName} — ${message.substring(0, 60)}…`, type: 'contact' }),
+      }).catch(() => {})
+    }
+
     return new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

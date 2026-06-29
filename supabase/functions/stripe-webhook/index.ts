@@ -106,6 +106,13 @@ serve(async (req) => {
 
           if (orderError) {
             console.error(`Failed to register order for session ${session.id}:`, orderError.message)
+          } else {
+            // Push notification (fire-and-forget)
+            fetch(`${supabaseUrl}/functions/v1/send-push`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ title: 'Nouvelle commande !', body: `${productTitle} — ${customerName}`, type: 'order' }),
+            }).catch(() => {})
           }
         }
       }

@@ -1,7 +1,62 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Package, ShoppingBag, Star, MessageSquare, LogOut } from 'lucide-react';
+import { Package, ShoppingBag, Star, MessageSquare, LogOut, Bell, BellOff } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { useAdminCounts } from '../../hooks/useAdminCounts';
+
+const VAPID_PUBLIC_KEY = 'BB3NKxbXKZYftqM_oCd0F7Zh2JYKkjOIq0NxKLNAFMkamT_oxv0zGnmKiVKx-j6dUL7b-GBXlzr7h6kzY562peY';
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+function usePushSubscription() {
+    const [status, setStatus] = useState('idle');
+
+    useEffect(() => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            setStatus('unsupported');
+            return;
+        }
+        if (Notification.permission === 'denied') { setStatus('denied'); return; }
+        navigator.serviceWorker.ready.then((reg) =>
+            reg.pushManager.getSubscription()
+        ).then((sub) => setStatus(sub ? 'subscribed' : 'idle'));
+    }, []);
+
+    const subscribe = async () => {
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            });
+            const { endpoint, keys } = sub.toJSON();
+            await supabase.from('push_subscriptions').upsert(
+                [{ endpoint, p256dh: keys.p256dh, auth: keys.auth }],
+                { onConflict: 'endpoint', ignoreDuplicates: true }
+            );
+            setStatus('subscribed');
+        } catch {
+            setStatus(Notification.permission === 'denied' ? 'denied' : 'idle');
+        }
+    };
+
+    const unsubscribe = async () => {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+            await sub.unsubscribe();
+        }
+        setStatus('idle');
+    };
+
+    return { status, subscribe, unsubscribe };
+}
 
 function Badge({ count }) {
     if (!count) return null;
@@ -22,11 +77,24 @@ const TABS = [
 export default function AdminLayout({ children, activeTab, title }) {
     const navigate = useNavigate();
     const counts = useAdminCounts();
+    const { status: pushStatus, subscribe, unsubscribe } = usePushSubscription();
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
         navigate('/admin/login');
     };
+
+    const handlePushToggle = () => {
+        if (pushStatus === 'subscribed') unsubscribe();
+        else subscribe();
+    };
+
+    const pushLabel = {
+        idle: 'Activer les notifications',
+        subscribed: 'Notifications activées',
+        denied: 'Notifications bloquées',
+        unsupported: 'Non supporté',
+    }[pushStatus] ?? '';
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -38,14 +106,36 @@ export default function AdminLayout({ children, activeTab, title }) {
             >
                 <span className="font-mono text-[11px] uppercase tracking-[0.25em] font-bold text-primary">Gesta</span>
                 <span className="font-sans text-sm font-medium truncate mx-4">{title}</span>
-                <button
-                    onClick={handleLogout}
-                    aria-label="Se déconnecter"
-                    className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors flex-shrink-0"
-                >
-                    <LogOut size={16} strokeWidth={1.5} />
-                    <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-widest">Sortir</span>
-                </button>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                    {pushStatus !== 'unsupported' && (
+                        <button
+                            onClick={handlePushToggle}
+                            disabled={pushStatus === 'denied'}
+                            aria-label={pushLabel}
+                            title={pushLabel}
+                            className={`flex items-center gap-1.5 transition-colors ${
+                                pushStatus === 'subscribed'
+                                    ? 'text-emerald-500 hover:text-rose-500'
+                                    : pushStatus === 'denied'
+                                    ? 'text-muted-foreground/40 cursor-not-allowed'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {pushStatus === 'subscribed'
+                                ? <Bell size={16} strokeWidth={1.5} />
+                                : <BellOff size={16} strokeWidth={1.5} />
+                            }
+                        </button>
+                    )}
+                    <button
+                        onClick={handleLogout}
+                        aria-label="Se déconnecter"
+                        className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors"
+                    >
+                        <LogOut size={16} strokeWidth={1.5} />
+                        <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-widest">Sortir</span>
+                    </button>
+                </div>
             </header>
 
             {/* Contenu */}
