@@ -34,13 +34,17 @@ function usePushSubscription() {
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
             });
-            const { endpoint, keys } = sub.toJSON();
-            await supabase.from('push_subscriptions').upsert(
-                [{ endpoint, p256dh: keys.p256dh, auth: keys.auth }],
+            const endpoint = sub.endpoint;
+            const p256dh = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh'))));
+            const auth   = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth'))));
+            const { error } = await supabase.from('push_subscriptions').upsert(
+                [{ endpoint, p256dh, auth }],
                 { onConflict: 'endpoint', ignoreDuplicates: true }
             );
+            if (error) throw error;
             setStatus('subscribed');
-        } catch {
+        } catch (err) {
+            console.error('[Push] subscribe error:', err);
             setStatus(Notification.permission === 'denied' ? 'denied' : 'idle');
         }
     };
@@ -99,47 +103,51 @@ export default function AdminLayout({ children, activeTab, title }) {
     return (
         <div className="min-h-screen bg-background text-foreground">
 
-            {/* Top header */}
+            {/* Top header — safe area gérée avec padding séparé du contenu */}
             <header
-                className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-b border-border h-14 flex items-center justify-between px-4 lg:px-8"
+                className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-b border-border"
                 style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
-                <span className="font-mono text-[11px] uppercase tracking-[0.25em] font-bold text-primary">Gesta</span>
-                <span className="font-sans text-sm font-medium truncate mx-4">{title}</span>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                    {pushStatus !== 'unsupported' && (
+                <div className="h-14 flex items-center justify-between px-5 lg:px-8">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.25em] font-bold text-primary flex-shrink-0">Gesta</span>
+                    <span className="font-sans text-sm font-medium truncate mx-4 text-center">{title}</span>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                        {pushStatus !== 'unsupported' && (
+                            <button
+                                onClick={handlePushToggle}
+                                disabled={pushStatus === 'denied'}
+                                aria-label={pushLabel}
+                                title={pushLabel}
+                                className={`flex items-center transition-colors ${
+                                    pushStatus === 'subscribed'
+                                        ? 'text-emerald-500 hover:text-rose-500'
+                                        : pushStatus === 'denied'
+                                        ? 'text-muted-foreground/40 cursor-not-allowed'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {pushStatus === 'subscribed'
+                                    ? <Bell size={18} strokeWidth={1.5} />
+                                    : <BellOff size={18} strokeWidth={1.5} />
+                                }
+                            </button>
+                        )}
                         <button
-                            onClick={handlePushToggle}
-                            disabled={pushStatus === 'denied'}
-                            aria-label={pushLabel}
-                            title={pushLabel}
-                            className={`flex items-center gap-1.5 transition-colors ${
-                                pushStatus === 'subscribed'
-                                    ? 'text-emerald-500 hover:text-rose-500'
-                                    : pushStatus === 'denied'
-                                    ? 'text-muted-foreground/40 cursor-not-allowed'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                            onClick={handleLogout}
+                            aria-label="Se déconnecter"
+                            className="flex items-center text-muted-foreground hover:text-rose-500 transition-colors"
                         >
-                            {pushStatus === 'subscribed'
-                                ? <Bell size={16} strokeWidth={1.5} />
-                                : <BellOff size={16} strokeWidth={1.5} />
-                            }
+                            <LogOut size={18} strokeWidth={1.5} />
                         </button>
-                    )}
-                    <button
-                        onClick={handleLogout}
-                        aria-label="Se déconnecter"
-                        className="flex items-center gap-1.5 text-muted-foreground hover:text-rose-500 transition-colors"
-                    >
-                        <LogOut size={16} strokeWidth={1.5} />
-                        <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-widest">Sortir</span>
-                    </button>
+                    </div>
                 </div>
             </header>
 
-            {/* Contenu */}
-            <main className="pt-16 pb-28 px-4 lg:px-8 max-w-6xl mx-auto">
+            {/* Contenu — padding-top = safe-area + hauteur header 56px + espace */}
+            <main
+                className="pb-28 px-4 lg:px-8 max-w-6xl mx-auto"
+                style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4rem)' }}
+            >
                 {children}
             </main>
 
