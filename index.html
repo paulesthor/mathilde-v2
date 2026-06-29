@@ -13,18 +13,45 @@
   <meta property="og:title" content="Atelier Gesta — Tapisserie & Création Sur-Mesure à Paris" />
   <meta property="og:description" content="Rénovation de sièges, rideaux sur-mesure et créations originales. Atelier parisien de tapisserie d'ameublement." />
   <meta property="og:image" content="https://paulesthor.github.io/mathilde-v2/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Atelier Gesta — Tapisserie & Création Sur-Mesure" />
   <meta name="twitter:description" content="Rénovation de sièges, rideaux sur-mesure et créations originales par Mathilde." />
+  <meta name="twitter:image" content="https://paulesthor.github.io/mathilde-v2/og-image.jpg" />
   <!-- Preconnect Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <!-- Security Headers -->
+  <!-- Security Headers (frame-ancestors must be set via HTTP header, not meta) -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://*.supabase.co https://images.unsplash.com data: blob:; connect-src 'self' https://*.supabase.co; font-src 'self' https://fonts.gstatic.com data:; frame-ancestors 'none';">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://*.supabase.co https://images.unsplash.com data: blob:; connect-src 'self' https://*.supabase.co; font-src 'self' https://fonts.gstatic.com data:;">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+  <!-- LocalBusiness structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Atelier Gesta",
+    "url": "https://paulesthor.github.io/mathilde-v2/",
+    "description": "Atelier de tapisserie d'ameublement et création sur-mesure à Paris. Rénovation de sièges, rideaux et créations originales.",
+    "image": "https://paulesthor.github.io/mathilde-v2/og-image.jpg",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Paris",
+      "addressCountry": "FR"
+    },
+    "sameAs": [
+      "https://instagram.com/gesta_studio"
+    ],
+    "openingHours": "Par rendez-vous uniquement",
+    "founder": {
+      "@type": "Person",
+      "name": "Mathilde"
+    }
+  }
+  </script>
 </head>
 
 <body>

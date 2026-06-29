@@ -22,6 +22,7 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                 <div className="mx-auto flex h-24 max-w-[1600px] items-center justify-end px-6 lg:px-12">
                     <button
                         onClick={onClose}
+                        aria-label="Fermer le menu"
                         className="group flex cursor-pointer items-center space-x-3 transition-opacity hover:text-primary"
                     >
                         <span className="hidden font-mono text-sm tracking-widest uppercase md:block">

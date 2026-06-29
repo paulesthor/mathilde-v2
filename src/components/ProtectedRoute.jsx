@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
-const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true' && !import.meta.env.PROD;
 
 export default function ProtectedRoute({ children }) {
     const [session, setSession] = useState(null);

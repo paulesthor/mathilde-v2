@@ -11,6 +11,7 @@ export default function MinimalNavbar({ onMenuClick }) {
                 </Link>
                 <button
                     onClick={onMenuClick}
+                    aria-label="Ouvrir le menu"
                     className="group flex cursor-pointer items-center space-x-3 transition-opacity hover:opacity-70"
                 >
                     <span className="hidden font-mono text-sm tracking-widest uppercase md:block">
