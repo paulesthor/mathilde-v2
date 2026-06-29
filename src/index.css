@@ -300,11 +300,13 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #CCC;
+  background: #888;
   border: none;
   cursor: pointer;
   transition: background 0.3s ease, transform 0.3s ease;
-  padding: 0;
+  /* Padding for 24×24px minimum touch target */
+  padding: 10px;
+  box-sizing: content-box;
 }
 
 .hero-carousel-dot.active {
