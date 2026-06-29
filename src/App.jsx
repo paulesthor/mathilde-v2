@@ -17,6 +17,7 @@ import AdminOrders from './pages/AdminOrders';
 import AdminContacts from './pages/AdminContacts';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
+import Success from './pages/Success';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Placeholder Pages
@@ -47,6 +48,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/legal" element={<Legal />} />
+            <Route path="/success" element={<Success />} />
             <Route path="/admin/login" element={<Login />} />
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
             <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />

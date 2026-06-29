@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import piece1 from '../../assets/piece_1.png';
-import piece2 from '../../assets/piece_2.png';
-import piece3 from '../../assets/piece_3.png';
-import portraitMathilde from '../../assets/portrait_mathilde.png';
+import piece1 from '../../assets/piece_1.webp';
+import piece2 from '../../assets/piece_2.webp';
+import piece3 from '../../assets/piece_3.webp';
+import portraitMathilde from '../../assets/portrait_mathilde.webp';
 
 // 4 real images for the carousel
 const CAROUSEL_IMAGES = [

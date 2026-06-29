@@ -113,6 +113,35 @@ serve(async (req) => {
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
               body: JSON.stringify({ title: 'Nouvelle commande !', body: `${productTitle} — ${customerName}`, type: 'order' }),
             }).catch(() => {})
+
+            // Email de confirmation au client (fire-and-forget)
+            const resendKey = Deno.env.get('RESEND_API_KEY')
+            if (resendKey && customerEmail) {
+              fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  from: 'Atelier Gesta <notifications@gesta-studio.com>',
+                  to: [customerEmail],
+                  subject: `Confirmation de commande — ${productTitle}`,
+                  html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
+                    <h1 style="font-size:28px;font-weight:400;margin-bottom:8px">Atelier Gesta</h1>
+                    <p style="font-family:monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:32px">Tapisserie & Création sur-mesure</p>
+                    <p style="font-size:16px;line-height:1.7">Bonjour ${customerName},</p>
+                    <p style="font-size:16px;line-height:1.7">Votre commande a bien été confirmée. Merci pour votre confiance !</p>
+                    <div style="background:#f9f7f4;border-left:2px solid #d4c5b0;padding:16px 20px;margin:24px 0">
+                      <p style="margin:0;font-family:monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:#888">Commande</p>
+                      <p style="margin:8px 0 0;font-size:20px;font-weight:600">${productTitle}</p>
+                      <p style="margin:4px 0 0;font-size:16px;color:#666">${amountTotal.toFixed(2)} €</p>
+                    </div>
+                    <p style="font-size:15px;line-height:1.7;color:#555">Mathilde vous contactera prochainement pour convenir des modalités de livraison ou de retrait.</p>
+                    <p style="font-size:14px;color:#888;margin-top:40px">À très bientôt,<br><strong>Mathilde — Atelier Gesta</strong></p>
+                    <hr style="margin:32px 0;border:none;border-top:1px solid #eee"/>
+                    <p style="font-size:11px;color:#bbb">Pour toute question : <a href="mailto:contact@gesta-studio.com" style="color:#888">contact@gesta-studio.com</a></p>
+                  </div>`,
+                }),
+              }).catch(() => {})
+            }
           }
         }
       }

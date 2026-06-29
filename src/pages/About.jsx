@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import portraitMathilde from '../assets/portrait_mathilde.png';
+import portraitMathilde from '../assets/portrait_mathilde.webp';
 
 export default function About() {
     return (

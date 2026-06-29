@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import MinimalModal from '../components/UI/MinimalModal';
-import piece1 from '../assets/piece_1.png';
-import piece2 from '../assets/piece_2.png';
-import piece3 from '../assets/piece_3.png';
+import piece1 from '../assets/piece_1.webp';
+import piece2 from '../assets/piece_2.webp';
+import piece3 from '../assets/piece_3.webp';
 
 const realisationsData = [
     {

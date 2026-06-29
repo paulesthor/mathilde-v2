@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Instagram, MapPin, Star } from 'lucide-react';
 import HeroCarousel from '../components/UI/HeroCarousel';
-import portraitMathilde from '../assets/portrait_mathilde.png';
+import portraitMathilde from '../assets/portrait_mathilde.webp';
 import { supabase } from '../utils/supabaseClient';
 
 const REVIEWS = [
@@ -95,21 +95,10 @@ export default function Home() {
         };
 
         try {
-            const envUrl = import.meta.env.VITE_SUPABASE_URL;
-            const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-            
-            if (!envUrl || !envKey) {
-                const localData = localStorage.getItem('gesta_reviews') || JSON.stringify(REVIEWS);
-                const parsed = JSON.parse(localData);
-                const simulatedObj = { ...newReview, id: Date.now().toString() };
-                localStorage.setItem('gesta_reviews', JSON.stringify([simulatedObj, ...parsed]));
-            } else {
-                const { error } = await supabase
-                    .from('reviews')
-                    .insert([newReview]);
-                if (error) throw error;
-            }
-            
+            const { error } = await supabase.functions.invoke('submit-review', {
+                body: { author_name: authorName, content, rating: parseInt(rating) }
+            });
+            if (error) throw error;
             setSubmitSuccess(true);
             setAuthorName('');
             setContent('');
