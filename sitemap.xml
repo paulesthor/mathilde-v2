@@ -1,39 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Note: Ce site utilise HashRouter (React SPA). Google ne peut pas indexer les routes
+  en fragment (#/prestations etc.) comme des pages distinctes. Seule la racine est
+  indexable. Pour l'indexation par page, envisager BrowserRouter + 404 redirect,
+  ou une migration vers un framework avec pre-rendering (Astro, Next.js).
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://paulesthor.github.io/mathilde-v2/</loc>
     <lastmod>2026-06-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://paulesthor.github.io/mathilde-v2/#/prestations</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://paulesthor.github.io/mathilde-v2/#/realisations</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://paulesthor.github.io/mathilde-v2/#/dispo</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://paulesthor.github.io/mathilde-v2/#/about</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://paulesthor.github.io/mathilde-v2/#/contact</loc>
-    <lastmod>2026-06-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.6</priority>
   </url>
 </urlset>
