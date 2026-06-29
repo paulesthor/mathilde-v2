@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
 const STATUS_LABELS = { new: 'Nouveau', read: 'Lu', replied: 'Répondu' };
@@ -34,6 +35,15 @@ export default function AdminContacts() {
     return (
         <div className="min-h-screen bg-background text-foreground pt-32 pb-24 px-6 lg:px-12">
             <div className="max-w-6xl mx-auto">
+                <nav className="flex flex-wrap items-center gap-6 mb-12 font-mono text-xs tracking-widest uppercase border-b border-border pb-6">
+                    <span className="font-bold text-primary">Gesta Admin</span>
+                    <span className="text-muted-foreground/30 hidden sm:inline">|</span>
+                    <Link to="/admin/products" className="hover:text-primary transition-colors text-muted-foreground hover:underline underline-offset-4">Catalogue</Link>
+                    <Link to="/admin/orders" className="hover:text-primary transition-colors text-muted-foreground hover:underline underline-offset-4">Commandes</Link>
+                    <Link to="/admin/reviews" className="hover:text-primary transition-colors text-muted-foreground hover:underline underline-offset-4">Modération Avis</Link>
+                    <Link to="/admin/contacts" className="hover:text-primary transition-colors font-bold underline underline-offset-4">Demandes</Link>
+                </nav>
+
                 <header className="mb-12">
                     <h1 className="font-editorial text-5xl tracking-tight mb-2">Demandes de contact</h1>
                     {newCount > 0 && (
