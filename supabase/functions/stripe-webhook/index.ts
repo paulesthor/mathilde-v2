@@ -89,10 +89,10 @@ serve(async (req) => {
             }
           }
 
-          // 2. Insert order details in orders table
+          // 2. Upsert order — idempotent on stripe_session_id to handle duplicate webhook delivery
           const { error: orderError } = await supabase
             .from('orders')
-            .insert([{
+            .upsert([{
               stripe_session_id: session.id,
               customer_name: customerName,
               customer_email: customerEmail,
@@ -102,7 +102,7 @@ serve(async (req) => {
               product_title: productTitle,
               stripe_product_id: stripeProductId,
               status: 'paid'
-            }])
+            }], { onConflict: 'stripe_session_id', ignoreDuplicates: true })
 
           if (orderError) {
             console.error(`Failed to register order for session ${session.id}:`, orderError.message)

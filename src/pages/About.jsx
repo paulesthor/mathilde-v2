@@ -1,8 +1,13 @@
+import { Helmet } from 'react-helmet-async';
 import portraitMathilde from '../assets/portrait_mathilde.png';
 
 export default function About() {
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-screen">
+            <Helmet>
+                <title>L'Atelier & Mathilde — À propos | Atelier Gesta</title>
+                <meta name="description" content="Découvrez Mathilde et l'Atelier Gesta, atelier parisien de tapisserie d'ameublement. Passion, savoir-faire artisanal et créations sur-mesure." />
+            </Helmet>
 
             {/* Intro Header */}
             <header className="pt-32 pb-16 md:pb-24 px-6 lg:px-12 mx-auto max-w-[1600px] flex justify-center text-center">
@@ -21,6 +26,7 @@ export default function About() {
                                 src={portraitMathilde}
                                 alt="Mathilde, Artisane Tapissière"
                                 className="w-full h-full object-cover"
+                                loading="lazy"
                             />
                         </div>
                     </div>

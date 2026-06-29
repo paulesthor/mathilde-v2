@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Instagram, MapPin, Star } from 'lucide-react';
 import HeroCarousel from '../components/UI/HeroCarousel';
 import portraitMathilde from '../assets/portrait_mathilde.png';
@@ -126,6 +127,10 @@ export default function Home() {
 
     return (
         <div className="animate-in fade-in duration-1000">
+            <Helmet>
+                <title>Atelier Gesta — Tapisserie & Création Sur-Mesure à Paris</title>
+                <meta name="description" content="Atelier Gesta, tapisserie d'ameublement et création sur-mesure à Paris. Rénovation de sièges, rideaux, créations originales par Mathilde." />
+            </Helmet>
 
             {/* ─── HERO EDITORIAL ─── */}
             <section className="hero-section">
@@ -167,7 +172,7 @@ export default function Home() {
                                     Paris — Uniquement sur RDV
                                 </span>
                                 <a
-                                    href="https://instagram.com"
+                                    href="https://instagram.com/gesta_studio"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="hero-contact-insta"

@@ -1,3 +1,5 @@
+import { Helmet } from 'react-helmet-async';
+
 export default function Contact() {
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -8,6 +10,10 @@ export default function Contact() {
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-[90vh] flex flex-col lg:flex-row">
+            <Helmet>
+                <title>Contact & Devis | Atelier Gesta</title>
+                <meta name="description" content="Contactez l'Atelier Gesta pour un devis de rénovation, une question ou un rendez-vous à l'atelier à Paris." />
+            </Helmet>
 
             {/* Editorial Title Side */}
             <div className="w-full lg:w-1/2 pt-32 pb-16 px-6 lg:px-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-border">

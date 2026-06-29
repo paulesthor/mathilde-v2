@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
+import { HelmetProvider } from 'react-helmet-async';
 import MinimalNavbar from './components/Layout/MinimalNavbar';
 import FullScreenMenu from './components/Layout/FullScreenMenu';
 import MinimalFooter from './components/Layout/MinimalFooter';
@@ -26,6 +27,7 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
+    <HelmetProvider>
     <HashRouter>
       <div className="flex min-h-screen flex-col">
         {/* Pass the toggle function to the Navbar */}
@@ -54,6 +56,7 @@ function App() {
         <MinimalFooter />
       </div>
     </HashRouter>
+    </HelmetProvider>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 const prestationsData = [
     {
@@ -40,6 +41,10 @@ export default function Prestations() {
 
     return (
         <div className="animate-in fade-in duration-1000 min-h-screen bg-background pt-32 pb-24 text-foreground flex flex-col justify-center">
+            <Helmet>
+                <title>Rénovation de Sièges & Rideaux Sur-Mesure | Atelier Gesta</title>
+                <meta name="description" content="Découvrez les prestations de l'Atelier Gesta : rénovation de sièges, rideaux sur-mesure, conseil en tissu. Artisanat parisien de qualité." />
+            </Helmet>
             <div className="mx-auto w-full max-w-[1600px] px-6 lg:px-12">
 
                 {/* Massive section title */}

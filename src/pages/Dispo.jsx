@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabaseClient';
 import MinimalModal from '../components/UI/MinimalModal';
 
@@ -64,7 +65,7 @@ export default function Dispo() {
                 } else {
                     setProducts(data);
                 }
-            } catch (err) {
+            } catch (err) {
                 const localData = localStorage.getItem('gesta_products');
                 if (localData) {
                     const parsed = JSON.parse(localData);
@@ -83,6 +84,10 @@ export default function Dispo() {
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24 text-foreground">
+            <Helmet>
+                <title>Pièces Disponibles — Archive | Atelier Gesta</title>
+                <meta name="description" content="Découvrez les pièces uniques disponibles à l'Atelier Gesta : fauteuils, chaises et créations disponibles immédiatement." />
+            </Helmet>
             <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
                 <header className="mb-24 md:mb-32 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
                     <h1 className="font-editorial text-6xl md:text-9xl tracking-tighter mix-blend-difference">

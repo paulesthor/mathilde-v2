@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ShieldCheck, Scale, FileText, Landmark } from 'lucide-react';
 
 export default function Legal() {
@@ -17,6 +18,10 @@ export default function Legal() {
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-screen pt-32 pb-24 text-foreground">
+            <Helmet>
+                <title>Mentions Légales & CGV | Atelier Gesta</title>
+                <meta name="description" content="Mentions légales, conditions générales de vente et politique de confidentialité de l'Atelier Gesta." />
+            </Helmet>
             <div className="mx-auto max-w-[1200px] px-6 lg:px-12">
                 <header className="mb-16">
                     <h1 className="font-editorial text-5xl md:text-8xl tracking-tighter">

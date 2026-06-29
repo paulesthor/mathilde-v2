@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import MinimalModal from '../components/UI/MinimalModal';
 import piece1 from '../assets/piece_1.png';
 import piece2 from '../assets/piece_2.png';
@@ -45,6 +46,10 @@ export default function Realisations() {
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24">
+            <Helmet>
+                <title>Réalisations — Portfolio de Tapisserie | Atelier Gesta</title>
+                <meta name="description" content="Portfolio de créations de l'Atelier Gesta : sièges rénovés, rideaux sur-mesure, pièces uniques. Découvrez le savoir-faire de Mathilde." />
+            </Helmet>
             <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
 
                 <header className="mb-32">
