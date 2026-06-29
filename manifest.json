@@ -1,0 +1,20 @@
+{
+  "name": "Atelier Gesta — Admin",
+  "short_name": "Gesta Admin",
+  "description": "Gérez votre atelier depuis votre téléphone",
+  "start_url": "/mathilde-v2/#/admin/products",
+  "scope": "/mathilde-v2/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#111111",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/mathilde-v2/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
