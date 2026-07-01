@@ -25,7 +25,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { data: subs, error: subsError } = await supabase
+    const { data: allSubs, error: subsError } = await supabase
       .from('push_subscriptions')
       .select('*')
 
@@ -33,6 +33,16 @@ serve(async (req) => {
       console.error('Failed to fetch subscriptions:', subsError.message)
       return new Response(JSON.stringify({ error: 'DB error' }), { status: 500 })
     }
+
+    const PREF_COLUMN_BY_TYPE: Record<string, string> = {
+      order: 'notify_orders',
+      contact: 'notify_contacts',
+      review: 'notify_reviews',
+    }
+    const prefColumn = PREF_COLUMN_BY_TYPE[type]
+    const subs = prefColumn
+      ? (allSubs ?? []).filter((sub) => sub[prefColumn] !== false)
+      : (allSubs ?? [])
 
     if (!subs || subs.length === 0) {
       return new Response(JSON.stringify({ sent: 0 }), { status: 200 })

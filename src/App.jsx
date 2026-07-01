@@ -15,6 +15,7 @@ import AdminReviews from './pages/AdminReviews';
 import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminContacts from './pages/AdminContacts';
+import AdminSettings from './pages/AdminSettings';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
 import Success from './pages/Success';
@@ -54,6 +55,7 @@ function App() {
             <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
             <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
             <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
           </Routes>
         </main>
 

@@ -1,66 +1,8 @@
-import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Package, ShoppingBag, Star, MessageSquare, LogOut, Bell, BellOff } from 'lucide-react';
+import { Package, ShoppingBag, Star, MessageSquare, Settings, LogOut, Bell, BellOff } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { useAdminCounts } from '../../hooks/useAdminCounts';
-
-const VAPID_PUBLIC_KEY = 'BB3NKxbXKZYftqM_oCd0F7Zh2JYKkjOIq0NxKLNAFMkamT_oxv0zGnmKiVKx-j6dUL7b-GBXlzr7h6kzY562peY';
-
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const raw = atob(base64);
-    return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
-}
-
-function usePushSubscription() {
-    const [status, setStatus] = useState('idle');
-
-    useEffect(() => {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            setStatus('unsupported');
-            return;
-        }
-        if (Notification.permission === 'denied') { setStatus('denied'); return; }
-        navigator.serviceWorker.ready.then((reg) =>
-            reg.pushManager.getSubscription()
-        ).then((sub) => setStatus(sub ? 'subscribed' : 'idle'));
-    }, []);
-
-    const subscribe = async () => {
-        try {
-            const reg = await navigator.serviceWorker.ready;
-            const sub = await reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-            });
-            const endpoint = sub.endpoint;
-            const p256dh = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh'))));
-            const auth   = btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth'))));
-            const { error } = await supabase.from('push_subscriptions').upsert(
-                [{ endpoint, p256dh, auth }],
-                { onConflict: 'endpoint', ignoreDuplicates: true }
-            );
-            if (error) throw error;
-            setStatus('subscribed');
-        } catch (err) {
-            console.error('[Push] subscribe error:', err);
-            setStatus(Notification.permission === 'denied' ? 'denied' : 'idle');
-        }
-    };
-
-    const unsubscribe = async () => {
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
-            await sub.unsubscribe();
-        }
-        setStatus('idle');
-    };
-
-    return { status, subscribe, unsubscribe };
-}
+import { usePushSubscription } from '../../hooks/usePushSubscription';
 
 function Badge({ count }) {
     if (!count) return null;
@@ -76,6 +18,7 @@ const TABS = [
     { id: 'orders',   label: 'Commandes', icon: ShoppingBag,   path: '/admin/orders',   countKey: 'orders' },
     { id: 'reviews',  label: 'Avis',      icon: Star,          path: '/admin/reviews',  countKey: 'reviews' },
     { id: 'contacts', label: 'Demandes',  icon: MessageSquare, path: '/admin/contacts', countKey: 'contacts' },
+    { id: 'settings', label: 'Réglages',  icon: Settings,      path: '/admin/settings', countKey: null },
 ];
 
 export default function AdminLayout({ children, activeTab, title }) {
@@ -153,7 +96,7 @@ export default function AdminLayout({ children, activeTab, title }) {
 
             {/* Bottom tab bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border grid grid-cols-4"
+                className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border grid grid-cols-5"
                 style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
                 {TABS.map(({ id, label, icon: Icon, path, countKey }) => {
