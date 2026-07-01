@@ -18,16 +18,7 @@ jobs:
       # un bucket Supabase Storage n'étant qu'une ligne dans storage.buckets.
       - name: Appliquer les migrations SQL + créer le bucket "products"
         run: |
-          cat supabase/orders_setup.sql \
-              supabase/decrement_product_quantity.sql \
-              supabase/migrations/20260629_contact_requests.sql \
-              supabase/migrations/20260629_push_subscriptions.sql \
-              supabase/migrations/20260701_notification_preferences.sql \
-              supabase/migrations/20260701_stripe_payment_link_id.sql \
-              > /tmp/combined.sql
-          echo "insert into storage.buckets (id, name, public) values ('products', 'products', true) on conflict (id) do nothing;" >> /tmp/combined.sql
-
-          SQL_JSON=$(jq -Rs . < /tmp/combined.sql)
+          SQL_JSON=$(jq -Rs . < supabase/deploy_all.sql)
           RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST \
             "https://api.supabase.com/v1/projects/dekmujrzeverlmnzjzbh/database/query" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
