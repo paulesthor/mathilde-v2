@@ -79,6 +79,10 @@ export default function AdminProducts() {
     const [isCompressing, setIsCompressing] = useState(false);
     const [wasCompressed, setWasCompressed] = useState(false);
 
+    // Stock editing (par produit déjà publié)
+    const [stockDrafts, setStockDrafts] = useState({});
+    const [savingStockId, setSavingStockId] = useState(null);
+
     const fetchProducts = async () => {
         setLoading(true);
         try {
@@ -152,6 +156,63 @@ export default function AdminProducts() {
             fetchProducts();
         } catch (err) {
             alert("Erreur lors de la mise à jour : " + err.message);
+        }
+    };
+
+    // Stock (quantité) d'un article déjà publié
+    const getStockDraft = (product) => stockDrafts[product.id] ?? String(product.quantity ?? 0);
+
+    const handleStockDraftChange = (id, value) => {
+        setStockDrafts((prev) => ({ ...prev, [id]: value }));
+    };
+
+    const clearStockDraft = (id) => {
+        setStockDrafts((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
+    };
+
+    const commitStock = async (product) => {
+        const draft = stockDrafts[product.id];
+        if (draft === undefined) return;
+
+        const parsed = parseInt(draft, 10);
+        if (isNaN(parsed) || parsed < 0) {
+            alert("Le stock doit être un nombre entier positif ou nul.");
+            clearStockDraft(product.id);
+            return;
+        }
+
+        if (parsed === (product.quantity ?? 0)) {
+            clearStockDraft(product.id);
+            return;
+        }
+
+        setSavingStockId(product.id);
+
+        if (isUsingMock) {
+            const updated = products.map(p => p.id === product.id ? { ...p, quantity: parsed } : p);
+            setProducts(updated);
+            localStorage.setItem('gesta_products', JSON.stringify(updated));
+            clearStockDraft(product.id);
+            setSavingStockId(null);
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('products')
+                .update({ quantity: parsed })
+                .eq('id', product.id);
+            if (error) throw error;
+            clearStockDraft(product.id);
+            await fetchProducts();
+        } catch (err) {
+            alert("Erreur lors de la mise à jour du stock : " + err.message);
+        } finally {
+            setSavingStockId(null);
         }
     };
 
@@ -501,11 +562,25 @@ export default function AdminProducts() {
 
                                              <div className="flex justify-between items-baseline mb-2">
                                                  <h3 className="font-editorial text-2xl">{product.title}</h3>
-                                                 <div className="flex flex-col items-end">
+                                                 <div className="flex flex-col items-end gap-1.5">
                                                      <span className="font-mono text-sm font-semibold">{product.price} €</span>
-                                                     {product.quantity !== undefined && product.quantity !== null && (
-                                                         <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground mt-1">Stock : {product.quantity}</span>
-                                                     )}
+                                                     <label className="flex items-center gap-1.5">
+                                                         <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Stock</span>
+                                                         <input
+                                                             type="number"
+                                                             min="0"
+                                                             step="1"
+                                                             value={getStockDraft(product)}
+                                                             onChange={(e) => handleStockDraftChange(product.id, e.target.value)}
+                                                             onBlur={() => commitStock(product)}
+                                                             onKeyDown={(e) => {
+                                                                 if (e.key === 'Enter') e.currentTarget.blur();
+                                                             }}
+                                                             disabled={savingStockId === product.id}
+                                                             aria-label={`Stock de ${product.title}`}
+                                                             className="w-14 bg-background border border-border px-2 py-0.5 font-mono text-xs text-right focus:border-primary outline-none rounded disabled:opacity-50"
+                                                         />
+                                                     </label>
                                                  </div>
                                              </div>
                                             <p className="font-sans font-light text-xs text-muted-foreground line-clamp-2 mb-4">
