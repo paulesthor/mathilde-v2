@@ -1,4 +1,4 @@
-name: Deploy Supabase Edge Functions
+name: Deploy Supabase Backend (migrations + bucket + functions)
 
 # Déclenchement manuel uniquement, depuis l'onglet Actions du repo
 # (bouton "Run workflow") — aucun déploiement automatique à chaque push.
@@ -10,6 +10,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Applique toutes les migrations SQL (tables, colonnes, policies) via
+      # l'API Management de Supabase, en réutilisant le même token que pour
+      # le déploiement des fonctions (pas besoin du mot de passe de la base).
+      # Crée aussi le bucket de stockage "products" (public en lecture),
+      # un bucket Supabase Storage n'étant qu'une ligne dans storage.buckets.
+      - name: Appliquer les migrations SQL + créer le bucket "products"
+        run: |
+          cat supabase/orders_setup.sql \
+              supabase/decrement_product_quantity.sql \
+              supabase/migrations/20260629_contact_requests.sql \
+              supabase/migrations/20260629_push_subscriptions.sql \
+              supabase/migrations/20260701_notification_preferences.sql \
+              supabase/migrations/20260701_stripe_payment_link_id.sql \
+              > /tmp/combined.sql
+          echo "insert into storage.buckets (id, name, public) values ('products', 'products', true) on conflict (id) do nothing;" >> /tmp/combined.sql
+
+          SQL_JSON=$(jq -Rs . < /tmp/combined.sql)
+          RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST \
+            "https://api.supabase.com/v1/projects/dekmujrzeverlmnzjzbh/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": $SQL_JSON}")
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | grep -o 'HTTP_STATUS:[0-9]*' | cut -d: -f2)
+          if [ "$STATUS" -ge 300 ]; then
+            echo "::error::Échec de l'application des migrations (HTTP $STATUS)"
+            exit 1
+          fi
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
       - uses: supabase/setup-cli@v1
         with:
