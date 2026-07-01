@@ -19,7 +19,10 @@ import AdminSettings from './pages/AdminSettings';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
 import Success from './pages/Success';
+import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
+import ScrollToTop from './components/ScrollToTop';
+import { ToastProvider } from './contexts/ToastContext';
 
 // Placeholder Pages
 
@@ -31,7 +34,9 @@ function App() {
 
   return (
     <HelmetProvider>
+    <ToastProvider>
     <HashRouter>
+      <ScrollToTop />
       <div className="flex min-h-screen flex-col">
         {/* Pass the toggle function to the Navbar */}
         <MinimalNavbar onMenuClick={() => setIsMenuOpen(true)} />
@@ -56,12 +61,14 @@ function App() {
             <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
             <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
 
         <MinimalFooter />
       </div>
     </HashRouter>
+    </ToastProvider>
     </HelmetProvider>
   );
 }

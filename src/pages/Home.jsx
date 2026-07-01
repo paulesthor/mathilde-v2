@@ -5,6 +5,7 @@ import { Instagram, MapPin, Star } from 'lucide-react';
 import HeroCarousel from '../components/UI/HeroCarousel';
 import portraitMathilde from '../assets/portrait_mathilde.webp';
 import { supabase } from '../utils/supabaseClient';
+import { useToast } from '../contexts/ToastContext';
 
 const REVIEWS = [
     { author_name: "Pauline R.", content: "Un travail remarquable sur mes bridges vintage. Le tissu est sublime et les finitions irréprochables. Une véritable artiste !", rating: 5, source: "local", status: "approved" },
@@ -14,6 +15,7 @@ const REVIEWS = [
 ];
 
 export default function Home() {
+    const { showToast } = useToast();
     const [reviews, setReviews] = useState(REVIEWS);
     const [isFormOpen, setIsFormOpen] = useState(false);
     
@@ -68,17 +70,17 @@ export default function Home() {
         // Anti-spam: rate limit 1 submission per 30 seconds
         const now = Date.now();
         if (now - lastSubmitTime < 30000) {
-            alert("Veuillez patienter avant d'envoyer un autre avis.");
+            showToast("Veuillez patienter avant d'envoyer un autre avis.", 'info');
             return;
         }
-        
+
         // Content validation
         if (authorName.length > 100) {
-            alert("Le nom est trop long (max 100 caractères).");
+            showToast("Le nom est trop long (max 100 caractères).", 'error');
             return;
         }
         if (content.length < 10 || content.length > 1000) {
-            alert("L'avis doit contenir entre 10 et 1000 caractères.");
+            showToast("L'avis doit contenir entre 10 et 1000 caractères.", 'error');
             return;
         }
         
@@ -108,7 +110,7 @@ export default function Home() {
                 setIsFormOpen(false);
             }, 4000);
         } catch (err) {
-            alert("Erreur lors de l'envoi : " + err.message);
+            showToast("Erreur lors de l'envoi : " + err.message, 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -229,10 +231,11 @@ export default function Home() {
                                 
                                 <div className="flex items-center gap-3">
                                     {review.author_photo_url ? (
-                                        <img 
-                                            src={review.author_photo_url} 
-                                            alt={review.author_name} 
+                                        <img
+                                            src={review.author_photo_url}
+                                            alt={review.author_name}
                                             className="w-8 h-8 rounded-full object-cover border border-border"
+                                            loading="lazy"
                                         />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-mono text-xs uppercase text-primary">

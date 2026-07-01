@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Database, Package, User, Mail, Phone, MapPin, Calendar, CreditCard, ChevronRight } from 'lucide-react';
+import { Database, Package, User, Mail, Phone, MapPin, Calendar, CreditCard, Search, Download, Receipt } from 'lucide-react';
 import AdminLayout from '../components/Layout/AdminLayout';
 
 const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
@@ -42,10 +42,38 @@ const DEFAULT_ORDERS = [
     }
 ];
 
+function ordersToCSV(orders) {
+    const headers = ['Date', 'Produit', 'Montant (EUR)', 'Client', 'Email', 'Téléphone', 'Adresse de livraison', 'Session Stripe'];
+    const escapeCsv = (value) => {
+        let str = String(value ?? '');
+        // Neutralise l'injection de formule CSV/Excel : un champ client (nom, adresse...)
+        // commençant par =, +, - ou @ pourrait sinon s'exécuter comme une formule
+        // à l'ouverture du fichier dans un tableur.
+        if (/^[=+\-@]/.test(str)) str = `'${str}`;
+        return `"${str.replace(/"/g, '""')}"`;
+    };
+    const rows = orders.map((o) => [
+        new Date(o.created_at).toLocaleDateString('fr-FR'),
+        o.product_title,
+        typeof o.amount_total === 'number' ? o.amount_total.toFixed(2) : o.amount_total,
+        o.customer_name,
+        o.customer_email,
+        o.customer_phone || '',
+        o.shipping_address
+            ? (typeof o.shipping_address === 'string'
+                ? o.shipping_address
+                : `${o.shipping_address.line1 || ''} ${o.shipping_address.postal_code || ''} ${o.shipping_address.city || ''} ${o.shipping_address.country || ''}`.trim())
+            : "Retrait à l'atelier",
+        o.stripe_session_id,
+    ].map(escapeCsv).join(','));
+    return [headers.map(escapeCsv).join(','), ...rows].join('\n');
+}
+
 export default function AdminOrders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isUsingMock, setIsUsingMock] = useState(false);
+    const [search, setSearch] = useState('');
     const fetchOrders = async () => {
         setLoading(true);
         try {
@@ -103,6 +131,31 @@ export default function AdminOrders() {
         return `${line1}${line2 ? `, ${line2}` : ''} - ${postal_code} ${city} (${country})`;
     };
 
+    const filteredOrders = useMemo(() => {
+        const query = search.trim().toLowerCase();
+        if (!query) return orders;
+        return orders.filter((o) =>
+            [o.customer_name, o.customer_email, o.product_title]
+                .some((field) => field?.toLowerCase().includes(query))
+        );
+    }, [orders, search]);
+
+    const stats = useMemo(() => {
+        const total = filteredOrders.reduce((sum, o) => sum + (typeof o.amount_total === 'number' ? o.amount_total : 0), 0);
+        return { count: filteredOrders.length, total };
+    }, [filteredOrders]);
+
+    const exportCSV = () => {
+        const csv = ordersToCSV(filteredOrders);
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `commandes-gesta-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <AdminLayout activeTab="orders" title="Commandes">
 
@@ -124,6 +177,44 @@ export default function AdminOrders() {
                     </div>
                 </header>
 
+                {!loading && orders.length > 0 && (
+                    <div className="mb-10 flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+                        <div className="flex flex-wrap gap-6">
+                            <div className="flex items-center gap-2">
+                                <Receipt className="h-4 w-4 text-primary" />
+                                <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                                    {stats.count} commande{stats.count > 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <div className="font-mono text-xs uppercase tracking-widest">
+                                <span className="text-muted-foreground">CA : </span>
+                                <span className="font-bold text-primary">{stats.total.toFixed(2)} €</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 items-center">
+                            <div className="relative">
+                                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Rechercher un client, un produit..."
+                                    className="pl-9 pr-3 py-2 bg-background border border-border text-sm font-sans focus:border-primary outline-none rounded w-full sm:w-64"
+                                />
+                            </div>
+                            <button
+                                onClick={exportCSV}
+                                className="flex items-center gap-2 px-4 py-2 border border-border hover:border-foreground transition-colors font-mono text-[10px] uppercase tracking-widest whitespace-nowrap rounded"
+                                title="Exporter en CSV"
+                            >
+                                <Download className="h-4 w-4" />
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="min-h-[40vh] flex items-center justify-center">
                         <p className="font-mono text-sm tracking-widest">Chargement de l'historique...</p>
@@ -133,9 +224,14 @@ export default function AdminOrders() {
                         <CreditCard className="h-12 w-12 text-muted-foreground/40 mb-4" />
                         <p className="font-sans font-light text-muted-foreground">Aucune commande enregistrée pour le moment.</p>
                     </div>
+                ) : filteredOrders.length === 0 ? (
+                    <div className="min-h-[20vh] flex flex-col items-center justify-center border border-dashed border-border/60 rounded-lg p-12 text-center">
+                        <Search className="h-10 w-10 text-muted-foreground/40 mb-4" />
+                        <p className="font-sans font-light text-muted-foreground">Aucune commande ne correspond à cette recherche.</p>
+                    </div>
                 ) : (
                     <div className="space-y-6">
-                        {orders.map((order) => (
+                        {filteredOrders.map((order) => (
                             <div 
                                 key={order.id} 
                                 className="border border-border/60 rounded-lg p-6 md:p-8 hover:border-primary/40 transition-colors bg-muted/5 flex flex-col lg:flex-row justify-between gap-8"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabaseClient';
 import { KeyRound, Mail, AlertCircle, Database } from 'lucide-react';
 
@@ -57,8 +58,12 @@ export default function Login() {
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-screen flex items-center justify-center text-foreground px-6 py-24">
+            <Helmet>
+                <title>Connexion — Admin Gesta</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </Helmet>
             <div className="w-full max-w-md border border-border/80 p-8 md:p-12 rounded-lg bg-muted/5 relative overflow-hidden">
-                
+
                 {/* Decorative background blur */}
                 <div className="absolute -top-24 -right-24 h-48 w-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 

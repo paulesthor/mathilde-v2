@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Check, X, Trash, ArrowRight, MessageSquare, Star, Database } from 'lucide-react';
 import AdminLayout from '../components/Layout/AdminLayout';
+import { useToast } from '../contexts/ToastContext';
 
 const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
 
@@ -13,6 +14,7 @@ const MOCK_REVIEWS = [
 ];
 
 export default function AdminReviews() {
+    const { showToast } = useToast();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // 'all', 'pending', 'approved', 'rejected'
@@ -97,7 +99,7 @@ export default function AdminReviews() {
             if (error) throw error;
             fetchReviews();
         } catch (err) {
-            alert("Erreur lors de la mise à jour: " + err.message);
+            showToast("Erreur lors de la mise à jour : " + err.message, 'error');
         }
     };
 
@@ -118,7 +120,7 @@ export default function AdminReviews() {
                 if (error) throw error;
                 fetchReviews();
             } catch (err) {
-                alert("Erreur lors de la suppression: " + err.message);
+                showToast("Erreur lors de la suppression : " + err.message, 'error');
             }
         }
     };
@@ -150,7 +152,7 @@ export default function AdminReviews() {
                 if (error) throw error;
                 fetchReviews();
             } catch (err) {
-                alert("Erreur lors de l'ajout: " + err.message);
+                showToast("Erreur lors de l'ajout : " + err.message, 'error');
             }
         }
 
@@ -159,7 +161,7 @@ export default function AdminReviews() {
         setNewContent('');
         setNewRating(5);
         setNewSource('local');
-        alert("Avis ajouté en attente de modération !");
+        showToast("Avis ajouté en attente de modération !", 'success');
     };
 
     // Filtered list

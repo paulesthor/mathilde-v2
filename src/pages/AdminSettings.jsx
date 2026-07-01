@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingBag, MessageSquare, Star, Bell, BellOff } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import { usePushSubscription } from '../hooks/usePushSubscription';
+import { useToast } from '../contexts/ToastContext';
 import AdminLayout from '../components/Layout/AdminLayout';
 
 const NOTIF_TYPES = [
@@ -27,6 +28,7 @@ function Toggle({ checked, onChange }) {
 }
 
 export default function AdminSettings() {
+    const { showToast } = useToast();
     const { status: pushStatus, endpoint, subscribe } = usePushSubscription();
     const [prefs, setPrefs] = useState({ notify_orders: true, notify_contacts: true, notify_reviews: true });
     const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function AdminSettings() {
             if (error) {
                 // rollback en cas d'échec d'écriture
                 setPrefs((prev) => ({ ...prev, [key]: !nextValue }));
-                alert("Erreur lors de la mise à jour : " + error.message);
+                showToast("Erreur lors de la mise à jour : " + error.message, 'error');
             }
         }
     };

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Package, ShoppingBag, Star, MessageSquare, Settings, LogOut, Bell, BellOff } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { useAdminCounts } from '../../hooks/useAdminCounts';
@@ -45,6 +46,10 @@ export default function AdminLayout({ children, activeTab, title }) {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
+            <Helmet>
+                <title>{title ? `${title} — Admin Gesta` : 'Admin Gesta'}</title>
+                <meta name="robots" content="noindex, nofollow" />
+            </Helmet>
 
             {/* Top header — safe area gérée avec padding séparé du contenu */}
             <header

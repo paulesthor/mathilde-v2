@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import MinimalModal from '../components/UI/MinimalModal';
 
 const creationsData = [
@@ -30,6 +31,10 @@ export default function Creations() {
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24 text-foreground">
+            <Helmet>
+                <title>Créations Inédites | Atelier Gesta</title>
+                <meta name="description" content="Créations textiles originales de l'Atelier Gesta : coussins, têtes de lit et pièces sur-mesure imaginées par Mathilde." />
+            </Helmet>
             <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
                 <header className="mb-24 md:mb-32">
                     <h1 className="font-editorial text-6xl md:text-9xl tracking-tighter mix-blend-difference">

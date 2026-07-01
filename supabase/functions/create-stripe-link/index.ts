@@ -95,6 +95,12 @@ serve(async (req) => {
       currency: 'eur',
     })
 
+    // Le client doit revenir sur le site après paiement, avec le résumé de sa commande,
+    // au lieu de rester sur la page de confirmation générique de Stripe.
+    const origin = req.headers.get('Origin') || ''
+    const siteBase = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+    const successUrl = `${siteBase}/mathilde-v2/#/success?session_id={CHECKOUT_SESSION_ID}`
+
     // 3. Payment link with optional quantity restriction and customer details collection
     const paymentLink = await stripe.paymentLinks.create({
       line_items: [
@@ -114,6 +120,10 @@ serve(async (req) => {
           limit: limitVal,
         },
       } : undefined,
+      after_completion: {
+        type: 'redirect',
+        redirect: { url: successUrl },
+      },
     })
 
     return new Response(

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { Check, Trash, Plus, Archive, Star, Database, Sparkles, ShoppingBag } from 'lucide-react';
+import { Check, Trash, Plus, Archive, Star, Database, Sparkles, ShoppingBag, Search } from 'lucide-react';
 import AdminLayout from '../components/Layout/AdminLayout';
+import { useToast } from '../contexts/ToastContext';
 
 const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
 
@@ -63,6 +64,7 @@ const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.75) 
 };
 
 export default function AdminProducts() {
+    const { showToast } = useToast();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isUsingMock, setIsUsingMock] = useState(false);
@@ -82,6 +84,14 @@ export default function AdminProducts() {
     // Stock editing (par produit déjà publié)
     const [stockDrafts, setStockDrafts] = useState({});
     const [savingStockId, setSavingStockId] = useState(null);
+
+    // Recherche dans le catalogue
+    const [search, setSearch] = useState('');
+    const filteredProducts = useMemo(() => {
+        const query = search.trim().toLowerCase();
+        if (!query) return products;
+        return products.filter((p) => p.title?.toLowerCase().includes(query));
+    }, [products, search]);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -156,7 +166,7 @@ export default function AdminProducts() {
             if (error) throw error;
             fetchProducts();
         } catch (err) {
-            alert("Erreur lors de la mise à jour : " + err.message);
+            showToast("Erreur lors de la mise à jour : " + err.message, 'error');
         }
     };
 
@@ -181,7 +191,7 @@ export default function AdminProducts() {
 
         const parsed = parseInt(draft, 10);
         if (isNaN(parsed) || parsed < 0) {
-            alert("Le stock doit être un nombre entier positif ou nul.");
+            showToast("Le stock doit être un nombre entier positif ou nul.", 'error');
             clearStockDraft(product.id);
             return;
         }
@@ -213,7 +223,7 @@ export default function AdminProducts() {
             clearStockDraft(product.id);
             await fetchProducts();
         } catch (err) {
-            alert("Erreur lors de la mise à jour du stock : " + err.message);
+            showToast("Erreur lors de la mise à jour du stock : " + err.message, 'error');
         } finally {
             setSavingStockId(null);
         }
@@ -248,7 +258,7 @@ export default function AdminProducts() {
                 if (error) throw error;
                 fetchProducts();
             } catch (err) {
-                alert("Erreur lors de la suppression : " + err.message);
+                showToast("Erreur lors de la suppression : " + err.message, 'error');
             }
         }
     };
@@ -287,7 +297,7 @@ export default function AdminProducts() {
             const updated = [newProduct, ...products];
             setProducts(updated);
             localStorage.setItem('gesta_products', JSON.stringify(updated));
-            alert("Produit ajouté avec succès (Lien Stripe simulé) !");
+            showToast("Produit ajouté avec succès (lien Stripe simulé) !", 'success');
             setSubmitting(false);
             setTitle('');
             setPrice('');
@@ -350,7 +360,7 @@ export default function AdminProducts() {
 
                 if (dbError) throw dbError;
 
-                alert("Produit créé avec succès dans votre catalogue et sur Stripe !");
+                showToast("Produit créé avec succès dans votre catalogue et sur Stripe !", 'success');
                 fetchProducts();
                 setTitle('');
                 setPrice('');
@@ -360,7 +370,7 @@ export default function AdminProducts() {
                 const fileInput = document.getElementById('image-upload-input');
                 if (fileInput) fileInput.value = '';
             } catch (err) {
-                alert("Erreur lors de la création : " + err.message + "\n\nNote : Assurez-vous que l'Edge Function 'create-stripe-link' est déployée et configurée.");
+                showToast("Erreur lors de la création : " + err.message, 'error');
             } finally {
                 setSubmitting(false);
             }
@@ -459,7 +469,7 @@ export default function AdminProducts() {
                                             if (!file) return;
 
                                             if (file.size > 20 * 1024 * 1024) {
-                                                alert("La photo d'origine dépasse la limite absolue de 20 Mo. Veuillez choisir une image plus petite.");
+                                                showToast("La photo d'origine dépasse la limite absolue de 20 Mo. Veuillez choisir une image plus petite.", 'error');
                                                 e.target.value = '';
                                                 setImageFile(null);
                                                 setWasCompressed(false);
@@ -524,10 +534,24 @@ export default function AdminProducts() {
 
                     {/* Colonne Droite : Liste du catalogue */}
                     <div className="w-full lg:w-2/3">
-                        <h2 className="font-editorial text-3xl mb-8 flex items-center gap-3">
-                            <ShoppingBag className="h-6 w-6 text-primary" />
-                            Catalogue actuel
-                        </h2>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <h2 className="font-editorial text-3xl flex items-center gap-3">
+                                <ShoppingBag className="h-6 w-6 text-primary" />
+                                Catalogue actuel
+                            </h2>
+                            {products.length > 0 && (
+                                <div className="relative">
+                                    <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder="Rechercher une pièce..."
+                                        className="pl-9 pr-3 py-2 bg-background border border-border text-sm font-sans focus:border-primary outline-none rounded w-full sm:w-56"
+                                    />
+                                </div>
+                            )}
+                        </div>
 
                         {loading ? (
                             <p className="font-mono text-sm tracking-widest py-12">Chargement...</p>
@@ -535,18 +559,23 @@ export default function AdminProducts() {
                             <div className="border border-dashed border-border py-16 text-center rounded-lg">
                                 <p className="font-sans font-light text-muted-foreground">Votre boutique est vide.</p>
                             </div>
+                        ) : filteredProducts.length === 0 ? (
+                            <div className="border border-dashed border-border py-16 text-center rounded-lg">
+                                <p className="font-sans font-light text-muted-foreground">Aucune pièce ne correspond à cette recherche.</p>
+                            </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {products.map((product) => (
+                                {filteredProducts.map((product) => (
                                     <div 
                                         key={product.id} 
                                         className="border border-border/80 bg-muted/10 p-6 rounded-lg flex flex-col justify-between hover:border-foreground/40 transition-colors"
                                     >
                                         <div>
                                             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted mb-4">
-                                                <img 
-                                                    src={product.image_url} 
-                                                    alt={product.title} 
+                                                <img
+                                                    src={product.image_url}
+                                                    alt={product.title}
+                                                    loading="lazy"
                                                     className="w-full h-full object-cover"
                                                 />
                                                 <div className="absolute top-3 right-3 flex gap-2">
