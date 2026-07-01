@@ -139,6 +139,8 @@ export default function AdminProducts() {
     }, []);
 
     // Change status (available, sold, archived)
+    // Passe par l'Edge Function pour synchroniser l'activation du lien Stripe
+    // (un article vendu/archivé ne doit plus être payable, même via un lien resté ouvert).
     const updateStatus = async (id, status) => {
         if (isUsingMock) {
             const updated = products.map(p => p.id === id ? { ...p, status } : p);
@@ -148,10 +150,9 @@ export default function AdminProducts() {
         }
 
         try {
-            const { error } = await supabase
-                .from('products')
-                .update({ status })
-                .eq('id', id);
+            const { error } = await supabase.functions.invoke('update-product', {
+                body: { product_id: id, status }
+            });
             if (error) throw error;
             fetchProducts();
         } catch (err) {
@@ -202,10 +203,12 @@ export default function AdminProducts() {
         }
 
         try {
-            const { error } = await supabase
-                .from('products')
-                .update({ quantity: parsed })
-                .eq('id', product.id);
+            // Passe par l'Edge Function : elle met aussi à jour le statut (vente/vendu)
+            // et désactive/réactive le lien Stripe en fonction du nouveau stock,
+            // pour qu'un article épuisé ne reste pas payable via un lien resté ouvert.
+            const { error } = await supabase.functions.invoke('update-product', {
+                body: { product_id: product.id, quantity: parsed }
+            });
             if (error) throw error;
             clearStockDraft(product.id);
             await fetchProducts();
@@ -340,6 +343,7 @@ export default function AdminProducts() {
                         description,
                         image_url: uploadedImageUrl,
                         stripe_payment_link: stripeData.payment_link,
+                        stripe_payment_link_id: stripeData.payment_link_id,
                         stripe_product_id: stripeData.stripe_product_id,
                         status: 'available'
                     }]);

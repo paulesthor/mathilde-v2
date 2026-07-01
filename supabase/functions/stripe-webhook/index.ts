@@ -70,7 +70,7 @@ serve(async (req) => {
 
           if (rpcError) {
             console.error(`RPC decrement failed for ${stripeProductId}:`, rpcError.message)
-            
+
             // Fallback: use standard update (less safe but functional)
             const { data: product, error: fetchError } = await supabase
               .from('products')
@@ -86,6 +86,22 @@ serve(async (req) => {
                 .from('products')
                 .update({ quantity: newQuantity, status: newStatus })
                 .eq('id', product.id)
+            }
+          }
+
+          // 1bis. Si le produit est maintenant épuisé, désactive son lien Stripe
+          // pour qu'un lien resté ouvert/partagé ne reste pas payable au-delà du stock réel.
+          const { data: postSaleProduct } = await supabase
+            .from('products')
+            .select('status, stripe_payment_link_id')
+            .eq('stripe_product_id', stripeProductId)
+            .single()
+
+          if (postSaleProduct?.status === 'sold' && postSaleProduct.stripe_payment_link_id) {
+            try {
+              await stripe.paymentLinks.update(postSaleProduct.stripe_payment_link_id, { active: false })
+            } catch (deactivateErr) {
+              console.error('Failed to deactivate sold-out payment link:', (deactivateErr as Error).message)
             }
           }
 
