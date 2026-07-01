@@ -53,6 +53,7 @@ Toutes les fonctions dans `supabase/functions/` doivent être déployées (`supa
 - [ ] `submit-review`
 - [ ] `send-push`
 - [ ] `update-product`
+- [ ] `get-checkout-session` (résumé de commande affiché sur la page de confirmation d'achat)
 
 ## 5. Hébergement / domaine
 
@@ -64,12 +65,12 @@ Toutes les fonctions dans `supabase/functions/` doivent être déployées (`supa
 
 - [ ] Remplacer les photos de démonstration (Unsplash) par les vraies photos des créations (catalogue, réalisations)
 - [ ] Vérifier/compléter les Mentions légales et CGV (`/legal`) avec les informations réelles de l'entreprise (SIRET, adresse, etc.)
-- [ ] Ajouter l'image `og-image.jpg` dans `/public` — elle est référencée dans `index.html` pour le partage sur les réseaux sociaux mais n'existe pas encore (le partage affichera une image cassée en l'état)
-- [ ] Ajouter de vraies icônes PWA (192×192 et 512×512 en PNG) dans `manifest.json` — actuellement seul un favicon SVG est fourni, ce qui fonctionne mal sur certains téléphones (notamment iOS) pour l'installation de l'app admin
+- [x] Image `og-image.jpg` pour le partage réseaux sociaux — générée (branding du site), à remplacer par une vraie photo si souhaité
+- [x] Icônes PWA PNG (192×192 et 512×512) — générées à partir du monogramme, référencées dans `manifest.json` et `index.html`
 
 ## 7. Tests à faire avant l'ouverture officielle
 
-- [ ] Achat complet de bout en bout avec une carte de test Stripe (`4242 4242 4242 4242`), puis un vrai petit paiement en mode live avant l'annonce
+- [ ] Achat complet de bout en bout avec une carte de test Stripe (`4242 4242 4242 4242`), puis un vrai petit paiement en mode live avant l'annonce — en vérifiant bien que le client est redirigé sur la page de confirmation du site avec le bon récapitulatif (nécessite que `get-checkout-session` et le nouveau `after_completion` du lien Stripe soient déployés)
 - [ ] Réception effective des emails de confirmation client
 - [ ] Réception des notifications push sur un vrai téléphone (Android **et** iOS si possible — le comportement diffère)
 - [ ] Formulaire de contact/devis (envoi + réception de l'email de notification)
