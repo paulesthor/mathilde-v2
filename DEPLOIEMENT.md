@@ -1,0 +1,82 @@
+# Checklist avant mise en ligne complète — Atelier Gesta
+
+Ce document liste tout ce qui reste à faire pour passer du site actuel (fonctionnel en développement) à une mise en ligne réelle, avec de vrais paiements et de vrais clients.
+
+## 1. Base de données Supabase — migrations à exécuter
+
+À exécuter dans l'éditeur SQL du dashboard Supabase, dans cet ordre (si ce n'est pas déjà fait) :
+
+- [ ] `supabase/orders_setup.sql` — table des commandes
+- [ ] `supabase/decrement_product_quantity.sql` — fonction de décrément atomique du stock
+- [ ] `supabase/migrations/20260629_contact_requests.sql` — demandes de devis
+- [ ] `supabase/migrations/20260629_push_subscriptions.sql` — abonnements aux notifications
+- [ ] `supabase/migrations/20260701_notification_preferences.sql` — préférences de notifications (onglet Réglages)
+- [ ] `supabase/migrations/20260701_stripe_payment_link_id.sql` — synchronisation des liens Stripe
+
+Table `products` : à vérifier qu'elle existe déjà avec les colonnes attendues (`title, price, quantity, description, image_url, stripe_payment_link, stripe_payment_link_id, stripe_product_id, status, created_at`) — elle n'a pas de script de création dans ce repo (créée manuellement au démarrage du projet).
+
+- [ ] Créer le bucket de stockage **`products`** (accès public en lecture) pour l'upload des photos depuis l'admin.
+
+## 2. Comptes & clés à configurer
+
+- [ ] **Stripe** : passer des clés de test (`sk_test_...`) aux clés live (`sk_live_...`) une fois les tests validés
+- [ ] **Stripe Webhook** : créer un endpoint dans le dashboard Stripe pointant vers l'URL de la fonction `stripe-webhook` déployée, sur l'événement `checkout.session.completed`, et récupérer le secret de signature
+- [ ] **Resend** (envoi d'emails) : créer un compte, vérifier le domaine d'expédition (`gesta-studio.com` ou le domaine réel utilisé) pour éviter que les emails de confirmation finissent en spam
+- [ ] **Clés VAPID** (notifications push) : générer une paire avec `npx web-push generate-vapid-keys` si ce n'est pas déjà fait — la clé publique actuelle est en dur dans `AdminLayout`/`usePushSubscription.js`, à garder cohérente avec celle enregistrée côté serveur
+- [ ] **Compte admin Supabase Auth** : créer l'utilisateur (email/mot de passe) que la cliente utilisera pour se connecter à `/admin/login`
+
+## 3. Variables d'environnement à renseigner
+
+### Côté site (fichier `.env` / secrets de l'hébergeur)
+- [ ] `VITE_SUPABASE_URL`
+- [ ] `VITE_SUPABASE_ANON_KEY`
+- [ ] Ne **jamais** définir `VITE_ENABLE_MOCK=true` en production (bascule tout en mode simulation hors-ligne)
+
+### Côté Edge Functions Supabase (Dashboard → Edge Functions → Secrets)
+- [ ] `STRIPE_SECRET_KEY`
+- [ ] `STRIPE_WEBHOOK_SECRET`
+- [ ] `RESEND_API_KEY`
+- [ ] `CONTACT_NOTIFY_EMAIL` (adresse recevant les notifications de devis — sinon `contact@gesta-studio.com` par défaut)
+- [ ] `VAPID_PUBLIC_KEY`
+- [ ] `VAPID_PRIVATE_KEY`
+- [ ] `VAPID_SUBJECT` (ex: `mailto:contact@gesta-studio.com`)
+
+(`SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont fournis automatiquement par Supabase, pas besoin de les renseigner manuellement.)
+
+## 4. Déploiement des Edge Functions
+
+Toutes les fonctions dans `supabase/functions/` doivent être déployées (`supabase functions deploy <nom>`) :
+
+- [ ] `create-stripe-link`
+- [ ] `stripe-webhook`
+- [ ] `send-contact-email`
+- [ ] `submit-review`
+- [ ] `send-push`
+- [ ] `update-product`
+
+## 5. Hébergement / domaine
+
+- Le site est actuellement configuré pour **GitHub Pages** sous `/mathilde-v2/` (`vite.config.js` → `base`, `index.html`, `manifest.json`, `robots.txt`, `sitemap.xml`).
+- [ ] **Aucune automatisation de déploiement (CI/CD) n'est présente actuellement** — `npm run build` doit être lancé et le contenu de `dist/` publié manuellement, ou une GitHub Action doit être ajoutée pour automatiser ça.
+- [ ] Si un nom de domaine personnalisé est utilisé à la place de `paulesthor.github.io`, mettre à jour partout : `base` dans `vite.config.js`, les URLs codées en dur dans `index.html` (`og:url`, `og:image`, JSON-LD), `robots.txt` (ligne `Sitemap:`), `sitemap.xml`, `manifest.json` (`start_url`, `scope`), et `ALLOWED_ORIGINS` dans chaque Edge Function (`supabase/functions/*/index.ts`).
+
+## 6. Contenu à finaliser avant l'ouverture au public
+
+- [ ] Remplacer les photos de démonstration (Unsplash) par les vraies photos des créations (catalogue, réalisations)
+- [ ] Vérifier/compléter les Mentions légales et CGV (`/legal`) avec les informations réelles de l'entreprise (SIRET, adresse, etc.)
+- [ ] Ajouter l'image `og-image.jpg` dans `/public` — elle est référencée dans `index.html` pour le partage sur les réseaux sociaux mais n'existe pas encore (le partage affichera une image cassée en l'état)
+- [ ] Ajouter de vraies icônes PWA (192×192 et 512×512 en PNG) dans `manifest.json` — actuellement seul un favicon SVG est fourni, ce qui fonctionne mal sur certains téléphones (notamment iOS) pour l'installation de l'app admin
+
+## 7. Tests à faire avant l'ouverture officielle
+
+- [ ] Achat complet de bout en bout avec une carte de test Stripe (`4242 4242 4242 4242`), puis un vrai petit paiement en mode live avant l'annonce
+- [ ] Réception effective des emails de confirmation client
+- [ ] Réception des notifications push sur un vrai téléphone (Android **et** iOS si possible — le comportement diffère)
+- [ ] Formulaire de contact/devis (envoi + réception de l'email de notification)
+- [ ] Connexion admin avec les vrais identifiants (hors mode simulation)
+
+## 8. Sécurité — derniers points de contrôle
+
+- [ ] Vérifier qu'aucun fichier `.env` n'est jamais commité (déjà exclu via `.gitignore`)
+- [ ] Vérifier les policies RLS Supabase sur chaque table (`products`, `orders`, `reviews`, `contact_requests`, `push_subscriptions`) — un accès en lecture/écriture doit être limité à ce qui est nécessaire
+- [ ] `robots.txt` autorise actuellement l'indexation de tout le site (`Allow: /`) : envisager d'exclure `/admin` par précaution, même si le `HashRouter` limite déjà l'indexation réelle de ces routes par Google
