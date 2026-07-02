@@ -1,25 +1,36 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Trash } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import AdminLayout from '../components/Layout/AdminLayout';
+import { useToast } from '../contexts/ToastContext';
 
 const STATUS_LABELS = { new: 'Nouveau', read: 'Lu', replied: 'Répondu' };
 const STATUS_COLORS = { new: 'text-amber-600', read: 'text-blue-600', replied: 'text-emerald-600' };
 
-function DetailPanel({ selected, updateStatus }) {
+function DetailPanel({ selected, updateStatus, deleteRequest }) {
     if (!selected) return <p className="font-mono text-sm text-muted-foreground tracking-widest">Sélectionnez une demande</p>;
     return (
         <div className="space-y-5 py-2">
-            <div>
-                <h2 className="font-editorial text-2xl">{selected.first_name} {selected.last_name}</h2>
-                <a href={`mailto:${selected.email}`} className="font-mono text-xs text-primary hover:underline tracking-widest">
-                    {selected.email}
-                </a>
-                {selected.phone && (
-                    <p className="font-mono text-sm mt-1">
-                        <a href={`tel:${selected.phone}`} className="text-muted-foreground hover:text-primary">{selected.phone}</a>
-                    </p>
-                )}
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h2 className="font-editorial text-2xl">{selected.first_name} {selected.last_name}</h2>
+                    <a href={`mailto:${selected.email}`} className="font-mono text-xs text-primary hover:underline tracking-widest">
+                        {selected.email}
+                    </a>
+                    {selected.phone && (
+                        <p className="font-mono text-sm mt-1">
+                            <a href={`tel:${selected.phone}`} className="text-muted-foreground hover:text-primary">{selected.phone}</a>
+                        </p>
+                    )}
+                </div>
+                <button
+                    onClick={() => deleteRequest(selected.id)}
+                    aria-label="Supprimer la demande"
+                    title="Supprimer la demande"
+                    className="p-2 border border-border text-muted-foreground hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all rounded shrink-0"
+                >
+                    <Trash className="h-4 w-4" />
+                </button>
             </div>
 
             {/* Statut */}
@@ -58,6 +69,7 @@ function DetailPanel({ selected, updateStatus }) {
 }
 
 export default function AdminContacts() {
+    const { showToast } = useToast();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
@@ -80,6 +92,19 @@ export default function AdminContacts() {
         await supabase.from('contact_requests').update({ status }).eq('id', id);
         setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
         if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
+    };
+
+    const deleteRequest = async (id) => {
+        if (!confirm('Voulez-vous vraiment supprimer cette demande ?')) return;
+        try {
+            const { error } = await supabase.from('contact_requests').delete().eq('id', id);
+            if (error) throw error;
+            setRequests((prev) => prev.filter((r) => r.id !== id));
+            if (selected?.id === id) setSelected(null);
+            showToast('Demande supprimée.', 'success');
+        } catch (err) {
+            showToast('Erreur lors de la suppression : ' + err.message, 'error');
+        }
     };
 
     const newCount = requests.filter((r) => r.status === 'new').length;
@@ -132,7 +157,7 @@ export default function AdminContacts() {
 
                         {/* Détail — desktop uniquement */}
                         <div className="hidden lg:block flex-1 border border-border p-8">
-                            <DetailPanel selected={selected} updateStatus={updateStatus} onClose={() => setSelected(null)} />
+                            <DetailPanel selected={selected} updateStatus={updateStatus} deleteRequest={deleteRequest} onClose={() => setSelected(null)} />
                         </div>
                     </div>
 
@@ -158,7 +183,7 @@ export default function AdminContacts() {
                                     </button>
                                 </div>
                                 <div className="px-5">
-                                    <DetailPanel selected={selected} updateStatus={updateStatus} onClose={() => setSelected(null)} />
+                                    <DetailPanel selected={selected} updateStatus={updateStatus} deleteRequest={deleteRequest} onClose={() => setSelected(null)} />
                                 </div>
                             </div>
                         </div>
