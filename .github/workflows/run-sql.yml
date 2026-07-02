@@ -1,0 +1,34 @@
+name: Run SQL on Supabase (maintenance)
+
+# Outil de maintenance ponctuelle : exécute une requête SQL fournie manuellement
+# via l'API Management de Supabase. À utiliser avec précaution (déclenchement
+# manuel uniquement, requête visible dans les logs du run).
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: "Requête SQL à exécuter"
+        required: true
+        type: string
+
+jobs:
+  run-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exécuter la requête
+        run: |
+          SQL_JSON=$(jq -Rs . <<< "$QUERY")
+          RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST \
+            "https://api.supabase.com/v1/projects/dekmujrzeverlmnzjzbh/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": $SQL_JSON}")
+          echo "$RESPONSE"
+          STATUS=$(echo "$RESPONSE" | grep -o 'HTTP_STATUS:[0-9]*' | cut -d: -f2)
+          if [ "$STATUS" -ge 300 ]; then
+            echo "::error::Échec de la requête (HTTP $STATUS)"
+            exit 1
+          fi
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          QUERY: ${{ inputs.query }}
