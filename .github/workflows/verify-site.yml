@@ -1,0 +1,24 @@
+name: Verify Site (smoke tests)
+
+# Déclenchement manuel — vérifie le site en ligne réel après un déploiement :
+# pages publiques, lectures Supabase, formulaire de contact, soumission d'avis.
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer Playwright
+        run: |
+          npm install playwright@latest
+          npx playwright install --with-deps chromium
+
+      - name: Lancer les vérifications
+        run: node scripts/verify-site.mjs
