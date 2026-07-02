@@ -42,22 +42,7 @@ export default function AdminReviews() {
                 
             if (error) throw error;
 
-            if (!data || data.length === 0) {
-                const { error: insertError } = await supabase
-                    .from('reviews')
-                    .insert(MOCK_REVIEWS);
-                if (!insertError) {
-                    const { data: refetched } = await supabase
-                        .from('reviews')
-                        .select('id, author_name, content, rating, status, source, created_at')
-                        .order('created_at', { ascending: false });
-                    setReviews(refetched || []);
-                } else {
-                    setReviews([]);
-                }
-            } else {
-                setReviews(data);
-            }
+            setReviews(data || []);
             setIsUsingMock(false);
         } catch (err) {
             if (MOCK_ENABLED) {

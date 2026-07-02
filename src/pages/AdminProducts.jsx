@@ -107,22 +107,7 @@ export default function AdminProducts() {
 
             if (error) throw error;
 
-            if (!data || data.length === 0) {
-                const { error: insertError } = await supabase
-                    .from('products')
-                    .insert(DEFAULT_PRODUCTS.map(({ id, ...rest }) => rest));
-                if (!insertError) {
-                    const { data: refetched } = await supabase
-                        .from('products')
-                        .select('id, title, price, quantity, description, image_url, stripe_payment_link, stripe_product_id, status, created_at')
-                        .order('created_at', { ascending: false });
-                    setProducts(refetched || []);
-                } else {
-                    setProducts([]);
-                }
-            } else {
-                setProducts(data);
-            }
+            setProducts(data || []);
             setIsUsingMock(false);
         } catch (err) {
             if (MOCK_ENABLED) {

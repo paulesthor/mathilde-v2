@@ -7,16 +7,9 @@ import portraitMathilde from '../assets/portrait_mathilde.webp';
 import { supabase } from '../utils/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
 
-const REVIEWS = [
-    { author_name: "Pauline R.", content: "Un travail remarquable sur mes bridges vintage. Le tissu est sublime et les finitions irréprochables. Une véritable artiste !", rating: 5, source: "local", status: "approved" },
-    { author_name: "Victor C.", content: "La colonne de tabourets est devenue la pièce maîtresse de notre salon. Esthétique, ingénieuse et colorée.", rating: 5, source: "local", status: "approved" },
-    { author_name: "Allison D.", content: "Mathilde a redonné vie à notre fauteuil de famille avec une sensibilité incroyable. Le style Memphis lui va à ravir !", rating: 5, source: "local", status: "approved" },
-    { author_name: "Marc L.", content: "Une créativité débordante alliée à un savoir-faire traditionnel impeccable. Je recommande vivement l'Atelier Gesta.", rating: 5, source: "local", status: "approved" }
-];
-
 export default function Home() {
     const { showToast } = useToast();
-    const [reviews, setReviews] = useState(REVIEWS);
+    const [reviews, setReviews] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     
     // Form fields
@@ -213,6 +206,7 @@ export default function Home() {
                     </h2>
                 </div>
                 
+                {reviews.length > 0 && (
                 <div className="relative w-full overflow-hidden flex py-4">
                     <div className="flex gap-8 animate-marquee whitespace-nowrap">
                         {[...reviews, ...reviews].map((review, idx) => (
@@ -255,6 +249,7 @@ export default function Home() {
                         ))}
                     </div>
                 </div>
+                )}
 
                 {/* Formulaire pour laisser un avis */}
                 <div className="mx-auto max-w-[1600px] px-6 lg:px-12 mt-16 flex flex-col items-center">
