@@ -70,6 +70,11 @@ CREATE POLICY "Admin update contact request status"
   ON contact_requests FOR UPDATE
   USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Admin delete contact requests" ON contact_requests;
+CREATE POLICY "Admin delete contact requests"
+  ON contact_requests FOR DELETE
+  USING (auth.role() = 'authenticated');
+
 -- 4. Abonnements aux notifications push (20260629_push_subscriptions.sql)
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
