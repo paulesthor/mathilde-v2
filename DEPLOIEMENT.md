@@ -78,6 +78,13 @@ Toutes les fonctions dans `supabase/functions/` doivent être déployées (`supa
 
 ## 8. Sécurité — derniers points de contrôle
 
-- [ ] Vérifier qu'aucun fichier `.env` n'est jamais commité (déjà exclu via `.gitignore`)
-- [ ] Vérifier les policies RLS Supabase sur chaque table (`products`, `orders`, `reviews`, `contact_requests`, `push_subscriptions`) — un accès en lecture/écriture doit être limité à ce qui est nécessaire
+- [x] Vérifier qu'aucun fichier `.env` n'est jamais commité — confirmé (`.gitignore` + historique git audité, aucune clé trouvée)
+- [x] Vérifier les policies RLS Supabase sur chaque table — confirmé, RLS activé et policies cohérentes sur `products`, `orders`, `reviews`, `contact_requests`, `push_subscriptions`
+- [x] CSP resserré (retrait de `unsafe-inline` sur `script-src`, testé sans régression)
+- [x] Dépendances vulnérables corrigées (`react-router-dom`, `vite` — 10 vulnérabilités npm audit résolues)
 - [ ] `robots.txt` autorise actuellement l'indexation de tout le site (`Allow: /`) : envisager d'exclure `/admin` par précaution, même si le `HashRouter` limite déjà l'indexation réelle de ces routes par Google
+
+## 9. À faire en toute fin de projet (une fois tout stabilisé)
+
+- [ ] **Supprimer ou restreindre le workflow `.github/workflows/run-sql.yml`** — c'est un outil de maintenance ponctuelle qui permet d'exécuter n'importe quelle requête SQL sur la base de production via un déclenchement manuel GitHub. Utile pendant le déploiement initial, mais à retirer une fois que tout est stable pour ne pas laisser cet accès total traîner indéfiniment.
+- [ ] Révoquer/faire tourner le token d'accès personnel Supabase utilisé pour le déploiement initial une fois qu'il n'est plus nécessaire.
