@@ -5,7 +5,16 @@ import piece1 from '../assets/piece_1.webp';
 import piece2 from '../assets/piece_2.webp';
 import piece3 from '../assets/piece_3.webp';
 import { fetchSiteContent, getItems } from '../lib/siteContent';
+import { supabase } from '../utils/supabaseClient';
+import { useToast } from '../contexts/ToastContext';
+import { useEditMode } from '../contexts/EditModeContext';
+import { uploadImageToBucket, removeImageFromBucket } from '../lib/imageUpload';
+import EditableText from '../components/Editable/EditableText';
+import InlineEditable from '../components/Editable/InlineEditable';
+import InlineEditableImage from '../components/Editable/InlineEditableImage';
+import { AddItemTile, DeleteItemButton } from '../components/Editable/EditableListControls';
 
+const BUCKET = 'site-content';
 const FALLBACK_LOCAL_IMAGES = [piece1, piece2, piece3];
 
 const DEFAULT_REALISATIONS = [
@@ -45,24 +54,69 @@ const DEFAULT_REALISATIONS = [
 ];
 
 export default function Realisations() {
+    const { showToast } = useToast();
+    const { isEditMode } = useEditMode();
     const [selectedItem, setSelectedItem] = useState(null);
     const [realisationsData, setRealisationsData] = useState(DEFAULT_REALISATIONS);
 
-    useEffect(() => {
-        const loadContent = async () => {
-            const { itemsBySection } = await fetchSiteContent('realisations');
-            const rows = getItems(itemsBySection, 'item', null);
-            if (!rows) return;
-            setRealisationsData(rows.map((row, idx) => ({
-                id: row.id,
-                title: row.title,
-                image: row.image_url || FALLBACK_LOCAL_IMAGES[idx] || FALLBACK_LOCAL_IMAGES[0],
-                description: row.text_value,
-                details: row.extra?.details || [],
-            })));
-        };
-        loadContent();
-    }, []);
+    const loadContent = async () => {
+        const { itemsBySection } = await fetchSiteContent('realisations');
+        const rows = getItems(itemsBySection, 'item', null);
+        if (!rows) return;
+        setRealisationsData(rows.map((row, idx) => ({
+            id: row.id,
+            title: row.title,
+            image: row.image_url || FALLBACK_LOCAL_IMAGES[idx] || FALLBACK_LOCAL_IMAGES[0],
+            imageUrl: row.image_url,
+            description: row.text_value,
+            details: row.extra?.details || [],
+            sortOrder: row.sort_order,
+        })));
+    };
+
+    useEffect(() => { loadContent(); }, []);
+
+    const updateItem = async (id, patch) => {
+        try {
+            const { error } = await supabase.from('site_content').update(patch).eq('id', id);
+            if (error) throw error;
+            setRealisationsData((prev) => prev.map((item) => (item.id === id ? {
+                ...item,
+                ...(patch.title !== undefined ? { title: patch.title } : {}),
+                ...(patch.text_value !== undefined ? { description: patch.text_value } : {}),
+                ...(patch.image_url !== undefined ? { image: patch.image_url, imageUrl: patch.image_url } : {}),
+                ...(patch.extra !== undefined ? { details: patch.extra.details || [] } : {}),
+            } : item)));
+            showToast('Enregistré', 'success');
+        } catch (err) {
+            showToast('Erreur : ' + err.message, 'error');
+        }
+    };
+
+    const handleImageUpload = async (id, file) => {
+        const item = realisationsData.find((i) => i.id === id);
+        const newUrl = await uploadImageToBucket(supabase, BUCKET, file);
+        await updateItem(id, { image_url: newUrl });
+        if (item?.imageUrl) await removeImageFromBucket(supabase, BUCKET, item.imageUrl);
+    };
+
+    const addItem = async () => {
+        const nextOrder = realisationsData.length > 0 ? Math.max(...realisationsData.map((i) => i.sortOrder || 0)) + 1 : 0;
+        const { data, error } = await supabase.from('site_content').insert([{
+            page: 'realisations', section: 'item', kind: 'list_item', title: 'Nouvelle réalisation', text_value: '', extra: { details: [] }, sort_order: nextOrder,
+        }]).select('id').single();
+        if (error) { showToast("Erreur lors de l'ajout : " + error.message, 'error'); return; }
+        setRealisationsData((prev) => [...prev, {
+            id: data.id, title: 'Nouvelle réalisation', image: FALLBACK_LOCAL_IMAGES[0], imageUrl: null, description: '', details: [], sortOrder: nextOrder,
+        }]);
+    };
+
+    const deleteItem = async (item) => {
+        if (item.imageUrl) await removeImageFromBucket(supabase, BUCKET, item.imageUrl);
+        const { error } = await supabase.from('site_content').delete().eq('id', item.id);
+        if (error) { showToast('Erreur lors de la suppression : ' + error.message, 'error'); return; }
+        setRealisationsData((prev) => prev.filter((i) => i.id !== item.id));
+    };
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24">
@@ -74,7 +128,7 @@ export default function Realisations() {
 
                 <header className="mb-32">
                     <h1 className="font-editorial text-7xl sm:text-9xl tracking-tighter mix-blend-difference">
-                        Réalisations.
+                        <EditableText page="realisations" section="page_title" fallback="Réalisations." as="span" multiline={false} />
                     </h1>
                 </header>
 
@@ -88,12 +142,10 @@ export default function Realisations() {
                         let offsetClass = "";
 
                         if (index === 1) {
-                            // Second item: Huge image, flush right, pulls up to overlap space
                             rowClass = "md:flex-row-reverse items-start";
                             imgWidthClass = "md:w-3/5 lg:w-[60%]";
                             offsetClass = "md:-mt-32";
                         } else if (index === 2) {
-                            // Third item: Smaller image, pushed to the center/right
                             rowClass = "md:flex-row items-end";
                             imgWidthClass = "md:w-1/2 lg:w-[40%]";
                             offsetClass = "md:pl-24 lg:pl-64 md:mt-16";
@@ -102,24 +154,28 @@ export default function Realisations() {
                         return (
                             <div
                                 key={item.id}
-                                className={`flex flex-col ${rowClass} gap-12 lg:gap-24 group cursor-pointer ${offsetClass}`}
-                                onClick={() => setSelectedItem(item)}
+                                className={`relative group flex flex-col ${rowClass} gap-12 lg:gap-24 ${offsetClass}`}
                             >
-                                <div className={`w-full ${imgWidthClass} overflow-hidden`}>
-                                    <img
+                                <DeleteItemButton onDelete={() => deleteItem(item)} label="Supprimer cette réalisation" />
+                                <div className={`w-full ${imgWidthClass} overflow-hidden cursor-pointer`} onClick={() => !isEditMode && setSelectedItem(item)}>
+                                    <InlineEditableImage
                                         src={item.image}
                                         alt={item.title}
-                                        className="w-full aspect-[4/5] object-cover filter grayscale opacity-90 transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105"
-                                        loading="lazy"
+                                        onUpload={(file) => handleImageUpload(item.id, file)}
+                                        imgClassName="w-full aspect-[4/5] object-cover filter grayscale opacity-90 transition-all duration-700 group-hover:grayscale-0 group-hover:opacity-100"
                                     />
                                 </div>
-                                <div className="w-full md:flex-1 flex flex-col justify-center">
+                                <div className="w-full md:flex-1 flex flex-col justify-center cursor-pointer" onClick={() => !isEditMode && setSelectedItem(item)}>
                                     <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6">
                                         0{index + 1}
                                     </span>
-                                    <h2 className="font-editorial text-4xl lg:text-7xl leading-tight mb-8">
-                                        {item.title}
-                                    </h2>
+                                    <InlineEditable
+                                        value={item.title}
+                                        onCommit={(v) => updateItem(item.id, { title: v })}
+                                        as="h2"
+                                        className="font-editorial text-4xl lg:text-7xl leading-tight mb-8"
+                                        multiline={false}
+                                    />
                                     <span className="font-mono text-sm tracking-widest text-primary hover:underline underline-offset-4">
                                         Explorer le projet
                                     </span>
@@ -128,12 +184,20 @@ export default function Realisations() {
                         );
                     })}
                 </div>
+
+                <AddItemTile onAdd={addItem} label="Ajouter une réalisation" className="mb-32" />
             </div>
 
             <MinimalModal
                 isOpen={!!selectedItem}
                 onClose={() => setSelectedItem(null)}
                 item={selectedItem}
+                editable={selectedItem ? {
+                    onSaveTitle: (v) => updateItem(selectedItem.id, { title: v }),
+                    onSaveDescription: (v) => updateItem(selectedItem.id, { text_value: v }),
+                    onSaveDetails: (details) => updateItem(selectedItem.id, { extra: { details } }),
+                    onSaveImage: (file) => handleImageUpload(selectedItem.id, file),
+                } : null}
             />
         </div>
     );

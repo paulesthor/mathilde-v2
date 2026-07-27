@@ -16,7 +16,6 @@ import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminContacts from './pages/AdminContacts';
 import AdminSettings from './pages/AdminSettings';
-import AdminContent from './pages/AdminContent';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
 import Success from './pages/Success';
@@ -24,6 +23,8 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import { ToastProvider } from './contexts/ToastContext';
+import { EditModeProvider } from './contexts/EditModeContext';
+import EditModeToggle from './components/Editable/EditModeToggle';
 
 // Placeholder Pages
 
@@ -36,6 +37,7 @@ function App() {
   return (
     <HelmetProvider>
     <ToastProvider>
+    <EditModeProvider>
     <HashRouter>
       <ScrollToTop />
       <div className="flex min-h-screen flex-col">
@@ -62,14 +64,15 @@ function App() {
             <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
             <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
-            <Route path="/admin/content" element={<ProtectedRoute><AdminContent /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
 
         <MinimalFooter />
+        <EditModeToggle />
       </div>
     </HashRouter>
+    </EditModeProvider>
     </ToastProvider>
     </HelmetProvider>
   );

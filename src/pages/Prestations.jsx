@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { fetchSiteContent, getItems } from '../lib/siteContent';
+import { supabase } from '../utils/supabaseClient';
+import { useToast } from '../contexts/ToastContext';
+import EditableText from '../components/Editable/EditableText';
+import InlineEditable from '../components/Editable/InlineEditable';
+import { AddItemTile, DeleteItemButton } from '../components/Editable/EditableListControls';
 
 const DEFAULT_PRESTATIONS = [
     {
@@ -41,6 +46,7 @@ const DEFAULT_PRESTATIONS = [
 ];
 
 export default function Prestations() {
+    const { showToast } = useToast();
     const [hoveredId, setHoveredId] = useState(null);
     const [prestationsData, setPrestationsData] = useState(DEFAULT_PRESTATIONS);
 
@@ -55,10 +61,49 @@ export default function Prestations() {
                 title: row.title,
                 description: row.text_value,
                 details: row.extra?.details || [],
+                sortOrder: row.sort_order,
             })));
         };
         loadContent();
     }, []);
+
+    const updateItem = async (id, patch) => {
+        try {
+            const { error } = await supabase.from('site_content').update(patch).eq('id', id);
+            if (error) throw error;
+            setPrestationsData((prev) => prev.map((item) => (item.id === id ? {
+                ...item,
+                ...(patch.title !== undefined ? { title: patch.title } : {}),
+                ...(patch.text_value !== undefined ? { description: patch.text_value } : {}),
+                ...(patch.extra !== undefined ? { details: patch.extra.details || [] } : {}),
+            } : item)));
+            showToast('Enregistré', 'success');
+        } catch (err) {
+            showToast('Erreur : ' + err.message, 'error');
+        }
+    };
+
+    const handleDetailsCommit = (item, text) => {
+        const details = text.split('\n').map((s) => s.trim()).filter(Boolean);
+        updateItem(item.id, { extra: { details } });
+    };
+
+    const addItem = async () => {
+        const nextOrder = prestationsData.length > 0 ? Math.max(...prestationsData.map((i) => i.sortOrder || 0)) + 1 : 0;
+        const { data, error } = await supabase.from('site_content').insert([{
+            page: 'prestations', section: 'item', kind: 'list_item', title: 'Nouvelle prestation', text_value: '', extra: { details: [] }, sort_order: nextOrder,
+        }]).select('id').single();
+        if (error) { showToast("Erreur lors de l'ajout : " + error.message, 'error'); return; }
+        setPrestationsData((prev) => [...prev, {
+            id: data.id, number: String(prev.length + 1).padStart(2, '0'), title: 'Nouvelle prestation', description: '', details: [], sortOrder: nextOrder,
+        }]);
+    };
+
+    const deleteItem = async (item) => {
+        const { error } = await supabase.from('site_content').delete().eq('id', item.id);
+        if (error) { showToast('Erreur lors de la suppression : ' + error.message, 'error'); return; }
+        setPrestationsData((prev) => prev.filter((i) => i.id !== item.id));
+    };
 
     return (
         <div className="animate-in fade-in duration-1000 min-h-screen bg-background pt-32 pb-24 text-foreground flex flex-col justify-center">
@@ -70,8 +115,8 @@ export default function Prestations() {
 
                 {/* Massive section title */}
                 <div className="mb-24 md:mb-32 flex justify-end">
-                    <h1 className="font-editorial text-5xl md:text-8xl w-full md:w-2/3 leading-none tracking-tighter mix-blend-difference">
-                        Expertise & <br /><span className="text-primary italic">Savoir-faire.</span>
+                    <h1 className="font-editorial text-5xl md:text-8xl w-full md:w-2/3 leading-none tracking-tighter mix-blend-difference text-right">
+                        <EditableText page="prestations" section="page_title" fallback="Expertise & Savoir-faire." as="span" />
                     </h1>
                 </div>
 
@@ -80,41 +125,49 @@ export default function Prestations() {
                     {prestationsData.map((item) => (
                         <div
                             key={item.id}
-                            className="group relative border-b border-border py-12 md:py-16 flex flex-col md:flex-row items-baseline justify-between transition-colors duration-500 hover:bg-muted/50 cursor-pointer"
+                            className="group relative border-b border-border py-12 md:py-16 flex flex-col md:flex-row items-baseline justify-between transition-colors duration-500 hover:bg-muted/50"
                             onMouseEnter={() => setHoveredId(item.id)}
                             onMouseLeave={() => setHoveredId(null)}
                         >
+                            <DeleteItemButton onDelete={() => deleteItem(item)} label="Supprimer cette prestation" />
                             {/* Left Side: Number + Title */}
                             <div className="flex items-baseline space-x-8 md:w-1/2">
                                 <span className="font-mono text-xl md:text-2xl text-muted-foreground transition-colors group-hover:text-primary">
                                     {item.number}
                                 </span>
-                                <h2 className="font-editorial text-5xl md:text-7xl tracking-tighter transition-transform duration-500 group-hover:translate-x-4">
-                                    {item.title}
-                                </h2>
+                                <InlineEditable
+                                    value={item.title}
+                                    onCommit={(v) => updateItem(item.id, { title: v })}
+                                    as="h2"
+                                    className="font-editorial text-5xl md:text-7xl tracking-tighter transition-transform duration-500 group-hover:translate-x-4"
+                                    multiline={false}
+                                />
                             </div>
 
                             {/* Right Side: Details (Fades in heavily on hover/focus) */}
                             <div className="mt-8 md:mt-0 md:w-1/2 md:pl-12 flex flex-col justify-center transition-all duration-500 ease-out md:opacity-40 group-hover:opacity-100">
-                                <p className="font-sans font-light text-lg md:text-xl leading-relaxed text-muted-foreground group-hover:text-foreground transition-colors max-w-lg">
-                                    {item.description}
-                                </p>
+                                <InlineEditable
+                                    value={item.description}
+                                    onCommit={(v) => updateItem(item.id, { text_value: v })}
+                                    as="p"
+                                    className="font-sans font-light text-lg md:text-xl leading-relaxed text-muted-foreground group-hover:text-foreground transition-colors max-w-lg"
+                                />
 
                                 {/* Expandable details list that shows on hover strongly on Desktop */}
                                 <div className={`mt-8 overflow-hidden transition-all duration-700 ${hoveredId === item.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-0'}`}>
-                                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-sm tracking-widest uppercase">
-                                        {item.details.map((detail, idx) => (
-                                            <li key={idx} className="flex items-start">
-                                                <span className="text-primary mr-2">+</span>
-                                                {detail}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <InlineEditable
+                                        value={item.details.join('\n')}
+                                        onCommit={(v) => handleDetailsCommit(item, v)}
+                                        as="div"
+                                        className="font-mono text-sm tracking-widest uppercase whitespace-pre-line"
+                                    />
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                <AddItemTile onAdd={addItem} label="Ajouter une prestation" className="mt-12" />
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import portraitMathilde from '../assets/portrait_mathilde.webp';
-import { fetchSiteContent, getText, getImage } from '../lib/siteContent';
+import EditableText from '../components/Editable/EditableText';
+import EditableImage from '../components/Editable/EditableImage';
 
 const DEFAULT_BIO = [
     "Mon parcours professionnel est atypique et s’est construit de mes centres d’intérêt et de mes envies d’exploration, tant intellectuelles que géographiques. J’ai étudié l’histoire de l’art à l’École du Louvre (spécialisations dans le décor et l’ameublement des grandes demeures, puis dans l’art du XXe siècle) et le droit de l’environnement.",
@@ -20,23 +20,6 @@ const DEFAULT_PHILOSOPHY = [
 ].join('\n\n');
 
 export default function About() {
-    const [portraitImage, setPortraitImage] = useState(portraitMathilde);
-    const [bioText, setBioText] = useState(DEFAULT_BIO);
-    const [philosophyText, setPhilosophyText] = useState(DEFAULT_PHILOSOPHY);
-
-    useEffect(() => {
-        const loadContent = async () => {
-            const { blocks } = await fetchSiteContent('about');
-            setPortraitImage(getImage(blocks, 'portrait_image', portraitMathilde));
-            setBioText(getText(blocks, 'bio_text', DEFAULT_BIO));
-            setPhilosophyText(getText(blocks, 'philosophy_text', DEFAULT_PHILOSOPHY));
-        };
-        loadContent();
-    }, []);
-
-    const bioParagraphs = bioText.split('\n\n').filter(Boolean);
-    const philosophyParagraphs = philosophyText.split('\n\n').filter(Boolean);
-
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-screen">
             <Helmet>
@@ -47,7 +30,7 @@ export default function About() {
             {/* Intro Header */}
             <header className="pt-32 pb-16 md:pb-24 px-6 lg:px-12 mx-auto max-w-[1600px] flex justify-center text-center">
                 <h1 className="font-editorial text-5xl md:text-8xl lg:text-[10rem] leading-[0.85] tracking-tighter">
-                    L'Atelier <br /> <span className="italic text-primary">Gesta.</span>
+                    <EditableText page="about" section="hero_title" fallback="L'Atelier Gesta." as="span" multiline={false} />
                 </h1>
             </header>
 
@@ -57,26 +40,28 @@ export default function About() {
 
                     <div className="w-full lg:w-1/2 lg:sticky lg:top-32">
                         <div className="relative aspect-[3/4] w-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000">
-                            <img
-                                src={portraitImage}
+                            <EditableImage
+                                page="about"
+                                section="portrait_image"
+                                fallback={portraitMathilde}
                                 alt="Mathilde, Artisane Tapissière"
-                                className="w-full h-full object-cover"
-                                loading="lazy"
+                                className="w-full h-full"
+                                imgClassName="w-full h-full object-cover"
                             />
                         </div>
                     </div>
 
                     <div className="w-full lg:w-1/2 flex flex-col">
                         <h2 className="font-mono text-sm tracking-widest text-primary uppercase mb-8">
-                            L'Artisane & Son Parcours
+                            <EditableText page="about" section="bio_label" fallback="L'Artisane & Son Parcours" as="span" multiline={false} />
                         </h2>
-                        <div className="font-sans font-light text-lg md:text-xl leading-relaxed text-foreground space-y-8">
-                            {bioParagraphs.map((paragraph, idx) => (
-                                <p key={idx} className={idx % 2 === 1 ? 'text-muted-foreground' : undefined}>
-                                    {paragraph}
-                                </p>
-                            ))}
-                        </div>
+                        <EditableText
+                            page="about"
+                            section="bio_text"
+                            fallback={DEFAULT_BIO}
+                            as="div"
+                            className="font-sans font-light text-lg md:text-xl leading-relaxed text-foreground whitespace-pre-line"
+                        />
                     </div>
 
                 </div>
@@ -86,29 +71,41 @@ export default function About() {
             <section className="border-t border-border/60 py-20 bg-muted/10">
                 <div className="mx-auto max-w-[1600px] px-6 lg:px-12">
                     <h2 className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground mb-12">
-                        Axes d'expertise
+                        <EditableText page="about" section="axes_label" fallback="Axes d'expertise" as="span" multiline={false} />
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                         <div className="flex flex-col border-l border-primary/30 pl-6 py-4">
-                            <span className="font-mono text-xs text-primary mb-2">01 / RESTAURATION</span>
-                            <h3 className="font-editorial text-2xl md:text-3xl">La rénovation de sièges modernes</h3>
+                            <span className="font-mono text-xs text-primary mb-2">
+                                <EditableText page="about" section="axis1_label" fallback="01 / RESTAURATION" as="span" multiline={false} />
+                            </span>
+                            <h3 className="font-editorial text-2xl md:text-3xl">
+                                <EditableText page="about" section="axis1_title" fallback="La rénovation de sièges modernes" as="span" multiline={false} />
+                            </h3>
                         </div>
                         <div className="flex flex-col border-l border-primary/30 pl-6 py-4">
-                            <span className="font-mono text-xs text-primary mb-2">02 / PIÈCES UNIQUES</span>
-                            <h3 className="font-editorial text-2xl md:text-3xl">La création de pièces contemporaines</h3>
+                            <span className="font-mono text-xs text-primary mb-2">
+                                <EditableText page="about" section="axis2_label" fallback="02 / PIÈCES UNIQUES" as="span" multiline={false} />
+                            </span>
+                            <h3 className="font-editorial text-2xl md:text-3xl">
+                                <EditableText page="about" section="axis2_title" fallback="La création de pièces contemporaines" as="span" multiline={false} />
+                            </h3>
                         </div>
                         <div className="flex flex-col border-l border-primary/30 pl-6 py-4">
-                            <span className="font-mono text-xs text-primary mb-2">03 / CONFECTION</span>
-                            <h3 className="font-editorial text-2xl md:text-3xl">La confection de rideaux adaptés aux intérieurs</h3>
+                            <span className="font-mono text-xs text-primary mb-2">
+                                <EditableText page="about" section="axis3_label" fallback="03 / CONFECTION" as="span" multiline={false} />
+                            </span>
+                            <h3 className="font-editorial text-2xl md:text-3xl">
+                                <EditableText page="about" section="axis3_title" fallback="La confection de rideaux adaptés aux intérieurs" as="span" multiline={false} />
+                            </h3>
                         </div>
                     </div>
-                    
+
                     <div className="mt-16 max-w-3xl">
                         <p className="font-editorial text-3xl md:text-4xl text-foreground leading-snug">
-                            C’est dans cette direction que je souhaite développer mon activité, en alliant savoir-faire artisanal, sensibilité esthétique et approche contemporaine du mobilier.
+                            <EditableText page="about" section="axes_summary" fallback="C’est dans cette direction que je souhaite développer mon activité, en alliant savoir-faire artisanal, sensibilité esthétique et approche contemporaine du mobilier." as="span" />
                         </p>
                         <p className="font-mono text-sm tracking-widest text-primary mt-6">
-                            Chaque pièce est unique et traitée comme une œuvre d'art.
+                            <EditableText page="about" section="axes_tagline" fallback="Chaque pièce est unique et traitée comme une œuvre d'art." as="span" multiline={false} />
                         </p>
                     </div>
                 </div>
@@ -120,22 +117,20 @@ export default function About() {
                     <div className="flex flex-col lg:flex-row gap-16 lg:gap-32">
                         <div className="w-full lg:w-1/3">
                             <h2 className="font-mono text-sm tracking-widest text-primary uppercase mb-4">
-                                Philosophie
+                                <EditableText page="about" section="philosophy_label" fallback="Philosophie" as="span" multiline={false} />
                             </h2>
                             <h3 className="font-editorial text-4xl md:text-6xl leading-tight">
-                                Démarche de création.
+                                <EditableText page="about" section="philosophy_title" fallback="Démarche de création." as="span" multiline={false} />
                             </h3>
                         </div>
-                        
-                        <div className="w-full lg:w-2/3 space-y-8 font-sans font-light text-lg md:text-xl leading-relaxed">
-                            {philosophyParagraphs.map((paragraph, idx) => {
-                                const isLast = idx === philosophyParagraphs.length - 1;
-                                const className = isLast
-                                    ? 'border-l-2 border-primary pl-6 py-2 italic font-editorial text-2xl md:text-3xl text-foreground'
-                                    : (idx % 2 === 1 ? 'text-muted-foreground' : undefined);
-                                return <p key={idx} className={className}>{paragraph}</p>;
-                            })}
-                        </div>
+
+                        <EditableText
+                            page="about"
+                            section="philosophy_text"
+                            fallback={DEFAULT_PHILOSOPHY}
+                            as="div"
+                            className="w-full lg:w-2/3 font-sans font-light text-lg md:text-xl leading-relaxed whitespace-pre-line"
+                        />
                     </div>
                 </div>
             </section>
