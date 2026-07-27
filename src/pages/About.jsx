@@ -1,7 +1,42 @@
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import portraitMathilde from '../assets/portrait_mathilde.webp';
+import { fetchSiteContent, getText, getImage } from '../lib/siteContent';
+
+const DEFAULT_BIO = [
+    "Mon parcours professionnel est atypique et s’est construit de mes centres d’intérêt et de mes envies d’exploration, tant intellectuelles que géographiques. J’ai étudié l’histoire de l’art à l’École du Louvre (spécialisations dans le décor et l’ameublement des grandes demeures, puis dans l’art du XXe siècle) et le droit de l’environnement.",
+    "J’ai exercé le métier de juriste pendant quatre ans. Malgré l’intérêt intellectuel, je ressentais un profond décalage avec mon quotidien professionnel. Une sensation persistante de ne pas être à ma place, voire de jouer un rôle.",
+    "Fin 2023, je décide de changer de cap. Il me mène vers la création, les couleurs, les objets, l’esthétique et le travail manuel. L’évidence s’impose : la tapisserie d’ameublement. Et la suite se fait assez naturellement, je rencontre une tapissière expérimentée chez qui je passe deux semaines en immersion. Dès les premières heures, je sais que j’ai trouvé ma voie.",
+    "Je décide de m’inscrire au CAP Tapissier en siège au lycée de Neufchâteau pour y apprendre la tapisserie traditionnelle (garniture en crin), les méthodes de la tapisserie moderne (garniture en mousse), ainsi que la couture d’ameublement. Je poursuis ma formation avec un Certificat de Qualification Professionnelle en couture d’ameublement au sein de l’AFPIA Est-Nord.",
+].join('\n\n');
+
+const DEFAULT_PHILOSOPHY = [
+    "Ma démarche de création combine la tapisserie, la couture et l'inspiration des arts plastiques du XXème siècle (peinture et sculpture majoritairement), mêlant formes épurées et géométriques à des couleurs franches et tranchées. La première réponse proposée est celle de la colonne de tabourets, dont un prototype a été réalisé en juin 2025 et une version finale au printemps 2026.",
+    "Ce qui me touche particulièrement dans l’art du XXème siècle, ce sont les formes géométriques et épurées que l’on retrouve chez de nombreux peintres et sculpteurs, ainsi que les couleurs franches et vibrantes des mouvements tels que le Fauvisme, le Bauhaus ou encore le Blaue Reiter. Ces éléments esthétiques sont pour moi une source constante d’inspiration.",
+    "Ces artistes ont choisi de s’éloigner de la représentation réaliste pour se concentrer sur l’émotion. En travaillant des motifs simplifiés et des couleurs parfois en rupture avec le réel, ils ont ouvert la voie à une expression plus instinctive, plus sensorielle. C’est cette capacité à faire ressentir, à toucher sans dire, que je cherche à retrouver dans mon propre travail : créer des objets qui, par leur forme et leur couleur, éveillent une émotion, procurent de la joie ou suscitent l’étonnement.",
+    "Aujourd’hui, dans une époque où les couleurs neutres dominent – par crainte du mauvais goût ou par souci de conformité –, je ressens le besoin de réintroduire de la couleur. Pour moi, la couleur est un moyen d’exprimer sa personnalité et de revendiquer une identité visuelle forte.",
+    "L’usage de formes géométriques répond également à une volonté de simplicité, en écho à l’art moderne, mais il a aussi une fonction pratique dans le travail de la tapisserie. Ma colonne de tabourets en est un exemple significatif. Inspirée par les lignes épurées de la Colonne sans fin de Brancusi, elle en reprend la verticalité et la modularité, tout en s’en démarquant par l’usage de couleurs franches, rompant ainsi avec la monochromie de la sculpture originale.",
+    "À travers cette approche, je cherche à créer des pièces qui conjuguent fonctionnalité, puissance plastique et charge émotionnelle, en puisant dans l’héritage artistique du siècle dernier pour proposer une lecture contemporaine, audacieuse et personnelle du mobilier.",
+].join('\n\n');
 
 export default function About() {
+    const [portraitImage, setPortraitImage] = useState(portraitMathilde);
+    const [bioText, setBioText] = useState(DEFAULT_BIO);
+    const [philosophyText, setPhilosophyText] = useState(DEFAULT_PHILOSOPHY);
+
+    useEffect(() => {
+        const loadContent = async () => {
+            const { blocks } = await fetchSiteContent('about');
+            setPortraitImage(getImage(blocks, 'portrait_image', portraitMathilde));
+            setBioText(getText(blocks, 'bio_text', DEFAULT_BIO));
+            setPhilosophyText(getText(blocks, 'philosophy_text', DEFAULT_PHILOSOPHY));
+        };
+        loadContent();
+    }, []);
+
+    const bioParagraphs = bioText.split('\n\n').filter(Boolean);
+    const philosophyParagraphs = philosophyText.split('\n\n').filter(Boolean);
+
     return (
         <div className="animate-in fade-in duration-1000 bg-background min-h-screen">
             <Helmet>
@@ -23,7 +58,7 @@ export default function About() {
                     <div className="w-full lg:w-1/2 lg:sticky lg:top-32">
                         <div className="relative aspect-[3/4] w-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-1000">
                             <img
-                                src={portraitMathilde}
+                                src={portraitImage}
                                 alt="Mathilde, Artisane Tapissière"
                                 className="w-full h-full object-cover"
                                 loading="lazy"
@@ -36,18 +71,11 @@ export default function About() {
                             L'Artisane & Son Parcours
                         </h2>
                         <div className="font-sans font-light text-lg md:text-xl leading-relaxed text-foreground space-y-8">
-                            <p>
-                                Mon parcours professionnel est atypique et s’est construit de mes centres d’intérêt et de mes envies d’exploration, tant intellectuelles que géographiques. J’ai étudié l’histoire de l’art à l’École du Louvre (spécialisations dans le décor et l’ameublement des grandes demeures, puis dans l’art du XXe siècle) et le droit de l’environnement.
-                            </p>
-                            <p className="text-muted-foreground">
-                                J’ai exercé le métier de juriste pendant quatre ans. Malgré l’intérêt intellectuel, je ressentais un profond décalage avec mon quotidien professionnel. Une sensation persistante de ne pas être à ma place, voire de jouer un rôle.
-                            </p>
-                            <p>
-                                Fin 2023, je décide de changer de cap. Il me mène vers la création, les couleurs, les objets, l’esthétique et le travail manuel. L’évidence s’impose : la tapisserie d’ameublement. Et la suite se fait assez naturellement, je rencontre une tapissière expérimentée chez qui je passe deux semaines en immersion. Dès les premières heures, je sais que j’ai trouvé ma voie.
-                            </p>
-                            <p className="text-muted-foreground">
-                                Je décide de m’inscrire au CAP Tapissier en siège au lycée de Neufchâteau pour y apprendre la tapisserie traditionnelle (garniture en crin), les méthodes de la tapisserie moderne (garniture en mousse), ainsi que la couture d’ameublement. Je poursuis ma formation avec un Certificat de Qualification Professionnelle en couture d’ameublement au sein de l’AFPIA Est-Nord.
-                            </p>
+                            {bioParagraphs.map((paragraph, idx) => (
+                                <p key={idx} className={idx % 2 === 1 ? 'text-muted-foreground' : undefined}>
+                                    {paragraph}
+                                </p>
+                            ))}
                         </div>
                     </div>
 
@@ -100,24 +128,13 @@ export default function About() {
                         </div>
                         
                         <div className="w-full lg:w-2/3 space-y-8 font-sans font-light text-lg md:text-xl leading-relaxed">
-                            <p>
-                                Ma démarche de création combine la tapisserie, la couture et l'inspiration des arts plastiques du XXème siècle (peinture et sculpture majoritairement), mêlant formes épurées et géométriques à des couleurs franches et tranchées. La première réponse proposée est celle de la colonne de tabourets, dont un prototype a été réalisé en juin 2025 et une version finale au printemps 2026.
-                            </p>
-                            <p className="text-muted-foreground">
-                                Ce qui me touche particulièrement dans l’art du XXème siècle, ce sont les formes géométriques et épurées que l’on retrouve chez de nombreux peintres et sculpteurs, ainsi que les couleurs franches et vibrantes des mouvements tels que le Fauvisme, le Bauhaus ou encore le Blaue Reiter. Ces éléments esthétiques sont pour moi une source constante d’inspiration.
-                            </p>
-                            <p>
-                                Ces artistes ont choisi de s’éloigner de la représentation réaliste pour se concentrer sur l’émotion. En travaillant des motifs simplifiés et des couleurs parfois en rupture avec le réel, ils ont ouvert la voie à une expression plus instinctive, plus sensorielle. C’est cette capacité à faire ressentir, à toucher sans dire, que je cherche à retrouver dans mon propre travail : créer des objets qui, par leur forme et leur couleur, éveillent une émotion, procurent de la joie ou suscitent l’étonnement.
-                            </p>
-                            <p className="text-muted-foreground">
-                                Aujourd’hui, dans une époque où les couleurs neutres dominent – par crainte du mauvais goût ou par souci de conformité –, je ressens le besoin de réintroduire de la couleur. Pour moi, la couleur est un moyen d’exprimer sa personnalité et de revendiquer une identité visuelle forte.
-                            </p>
-                            <p>
-                                L’usage de formes géométriques répond également à une volonté de simplicité, en écho à l’art moderne, mais il a aussi une fonction pratique dans le travail de la tapisserie. Ma colonne de tabourets en est un exemple significatif. Inspirée par les lignes épurées de la <em>Colonne sans fin</em> de Brancusi, elle en reprend la verticalité et la modularité, tout en s’en démarquant par l’usage de couleurs franches, rompant ainsi avec la monochromie de la sculpture originale.
-                            </p>
-                            <p className="border-l-2 border-primary pl-6 py-2 italic font-editorial text-2xl md:text-3xl text-foreground">
-                                À travers cette approche, je cherche à créer des pièces qui conjuguent fonctionnalité, puissance plastique et charge émotionnelle, en puisant dans l’héritage artistique du siècle dernier pour proposer une lecture contemporaine, audacieuse et personnelle du mobilier.
-                            </p>
+                            {philosophyParagraphs.map((paragraph, idx) => {
+                                const isLast = idx === philosophyParagraphs.length - 1;
+                                const className = isLast
+                                    ? 'border-l-2 border-primary pl-6 py-2 italic font-editorial text-2xl md:text-3xl text-foreground'
+                                    : (idx % 2 === 1 ? 'text-muted-foreground' : undefined);
+                                return <p key={idx} className={className}>{paragraph}</p>;
+                            })}
                         </div>
                     </div>
                 </div>

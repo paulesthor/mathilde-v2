@@ -3,65 +3,15 @@ import { supabase } from '../utils/supabaseClient';
 import { Check, Trash, Plus, Archive, Star, Database, Sparkles, ShoppingBag, Search } from 'lucide-react';
 import AdminLayout from '../components/Layout/AdminLayout';
 import { useToast } from '../contexts/ToastContext';
+import { prepareImageFile, uploadImageToBucket, removeImageFromBucket } from '../lib/imageUpload';
 
 const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
-
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const DEFAULT_PRODUCTS = [
     { id: '1', title: "Chauffeuse 70s", price: 450, quantity: 1, description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.", image_url: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() },
     { id: '2', title: "Paire de Bridge", price: 890, quantity: 1, description: "Paire de fauteuils bridge fifties. Le contraste entre le chêne clair et le velours forêt met en valeur l'architecture des sièges.", image_url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() },
     { id: '3', title: "Lampe Abat-jour Plissé", price: 180, quantity: 1, description: "Pied de lampe vintage en laiton associé à un abat-jour entièrement plissé main à l'atelier.", image_url: "https://images.unsplash.com/photo-1507646873528-984bb365774a?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() }
 ];
-
-const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.75) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-
-                if (width > maxWidth || height > maxHeight) {
-                    if (width > height) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    } else {
-                        width = Math.round((width * maxHeight) / height);
-                        height = maxHeight;
-                    }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob(
-                    (blob) => {
-                        if (!blob) {
-                            reject(new Error("Image compression failed"));
-                            return;
-                        }
-                        const compressedFile = new File([blob], file.name, {
-                            type: 'image/jpeg',
-                            lastModified: Date.now()
-                        });
-                        resolve(compressedFile);
-                    },
-                    'image/jpeg',
-                    quality
-                );
-            };
-            img.onerror = (err) => reject(err);
-        };
-        reader.onerror = (err) => reject(err);
-    });
-};
 
 export default function AdminProducts() {
     const { showToast } = useToast();
@@ -227,13 +177,8 @@ export default function AdminProducts() {
             try {
                 // Find product to delete its image from storage first
                 const product = products.find(p => p.id === id);
-                if (product && product.image_url && product.image_url.includes('/storage/v1/object/public/products/')) {
-                    const fileName = product.image_url.split('/products/').pop();
-                    if (fileName) {
-                        await supabase.storage
-                            .from('products')
-                            .remove([fileName]);
-                    }
+                if (product) {
+                    await removeImageFromBucket(supabase, 'products', product.image_url);
                 }
 
                 const { error } = await supabase
@@ -294,25 +239,7 @@ export default function AdminProducts() {
         } else {
             try {
                 if (imageFile) {
-                    // Validate MIME type before upload
-                    if (!ALLOWED_IMAGE_TYPES.includes(imageFile.type)) {
-                        throw new Error("Format non supporté. Utilisez JPG, PNG ou WebP.");
-                    }
-                    const fileExt = imageFile.name.split('.').pop();
-                    const fileName = `${Date.now()}.${fileExt}`;
-                    const filePath = `${fileName}`;
-
-                    const { error: uploadError } = await supabase.storage
-                        .from('products')
-                        .upload(filePath, imageFile);
-
-                    if (uploadError) throw new Error("Erreur de téléversement photo : " + uploadError.message);
-
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('products')
-                        .getPublicUrl(filePath);
-                    
-                    uploadedImageUrl = publicUrl;
+                    uploadedImageUrl = await uploadImageToBucket(supabase, 'products', imageFile);
                 }
 
                 // Call Supabase Edge Function to generate Stripe link
@@ -453,30 +380,18 @@ export default function AdminProducts() {
                                             const file = e.target.files[0];
                                             if (!file) return;
 
-                                            if (file.size > 20 * 1024 * 1024) {
-                                                showToast("La photo d'origine dépasse la limite absolue de 20 Mo. Veuillez choisir une image plus petite.", 'error');
+                                            setIsCompressing(true);
+                                            setWasCompressed(false);
+                                            try {
+                                                const { file: prepared, wasCompressed } = await prepareImageFile(file);
+                                                setImageFile(prepared);
+                                                setWasCompressed(wasCompressed);
+                                            } catch (err) {
+                                                showToast(err.message, 'error');
                                                 e.target.value = '';
                                                 setImageFile(null);
-                                                setWasCompressed(false);
-                                                return;
-                                            }
-
-                                            if (file.size > 1.2 * 1024 * 1024) { // > 1.2 MB
-                                                setIsCompressing(true);
-                                                setWasCompressed(false);
-                                                try {
-                                                    const compressed = await compressImage(file);
-                                                    setImageFile(compressed);
-                                                    setWasCompressed(true);
-                                                } catch (err) {
-                                                    console.error("Image compression error:", err);
-                                                    setImageFile(file); // Fallback to original
-                                                } finally {
-                                                    setIsCompressing(false);
-                                                }
-                                            } else {
-                                                setImageFile(file);
-                                                setWasCompressed(false);
+                                            } finally {
+                                                setIsCompressing(false);
                                             }
                                         }}
                                         className="w-full bg-background border border-border px-4 py-3 font-sans text-sm focus:border-primary outline-none transition-colors cursor-pointer file:mr-4 file:py-1 file:px-3 file:border-0 file:text-[10px] file:font-mono file:uppercase file:bg-primary file:text-white file:hover:bg-primary/95"

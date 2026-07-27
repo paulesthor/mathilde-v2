@@ -6,10 +6,21 @@ import HeroCarousel from '../components/UI/HeroCarousel';
 import portraitMathilde from '../assets/portrait_mathilde.webp';
 import { supabase } from '../utils/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
+import { fetchSiteContent, getText, getImage } from '../lib/siteContent';
+
+const DEFAULTS = {
+    heroEyebrow: "Atelier de Tapisserie d'Ameublement",
+    heroTitle: "Adopter une décoration qui vous ressemble et faites revenir la couleur dans votre intérieur.",
+    portraitName: 'Mathilde',
+    portraitRole: 'Artisane Tapissière · Atelier Gesta',
+    editorialCitation: "Allier savoir-faire artisanal, sensibilité esthétique et approche contemporaine du mobilier.",
+};
 
 export default function Home() {
     const { showToast } = useToast();
     const [reviews, setReviews] = useState([]);
+    const [pageContent, setPageContent] = useState(DEFAULTS);
+    const [portraitImage, setPortraitImage] = useState(portraitMathilde);
     const [isFormOpen, setIsFormOpen] = useState(false);
     
     // Form fields
@@ -54,6 +65,19 @@ export default function Home() {
             }
         };
         loadReviews();
+
+        const loadContent = async () => {
+            const { blocks } = await fetchSiteContent('home');
+            setPageContent({
+                heroEyebrow: getText(blocks, 'hero_eyebrow', DEFAULTS.heroEyebrow),
+                heroTitle: getText(blocks, 'hero_title', DEFAULTS.heroTitle),
+                portraitName: getText(blocks, 'portrait_name', DEFAULTS.portraitName),
+                portraitRole: getText(blocks, 'portrait_role', DEFAULTS.portraitRole),
+                editorialCitation: getText(blocks, 'editorial_citation', DEFAULTS.editorialCitation),
+            });
+            setPortraitImage(getImage(blocks, 'portrait_image', portraitMathilde));
+        };
+        loadContent();
     }, []);
 
     const handleSubmitReview = async (e) => {
@@ -128,7 +152,7 @@ export default function Home() {
                     <div className="hero-portrait-col">
                         <div className="hero-portrait-frame">
                             <img
-                                src={portraitMathilde}
+                                src={portraitImage}
                                 alt="Mathilde, fondatrice de l'Atelier Gesta"
                                 className="hero-portrait-img"
                             />
@@ -138,16 +162,16 @@ export default function Home() {
 
                         {/* Nom flottant sous le portrait, légèrement décalé */}
                         <div className="hero-portrait-credit">
-                            <span className="hero-portrait-name">Mathilde</span>
-                            <span className="hero-portrait-role">Artisane Tapissière · Atelier Gesta</span>
+                            <span className="hero-portrait-name">{pageContent.portraitName}</span>
+                            <span className="hero-portrait-role">{pageContent.portraitRole}</span>
                         </div>
                     </div>
 
                     {/* ── COLONNE CENTRALE : texte éditorial ── */}
                     <div className="hero-text-col">
-                        <p className="hero-eyebrow">Atelier de Tapisserie d'Ameublement</p>
+                        <p className="hero-eyebrow">{pageContent.heroEyebrow}</p>
                         <h1 className="hero-h1">
-                            Adopter une décoration qui vous ressemble et faites revenir la couleur dans votre intérieur.
+                            {pageContent.heroTitle}
                         </h1>
                         <div className="hero-contact-card">
                             <div className="hero-contact-block">
@@ -185,7 +209,7 @@ export default function Home() {
             <section className="editorial-section">
                 <div className="editorial-inner">
                     <h2 className="editorial-h2">
-                        Allier savoir-faire artisanal, sensibilité esthétique et approche contemporaine du mobilier.
+                        {pageContent.editorialCitation}
                     </h2>
                     <div className="mt-16">
                         <Link to="/about" className="editorial-link">

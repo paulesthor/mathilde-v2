@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { fetchSiteContent, getItems } from '../lib/siteContent';
 
-const prestationsData = [
+const DEFAULT_PRESTATIONS = [
     {
         id: '01',
+        number: '01',
         title: "Rénovation de sièges",
         description: "Redonnez vie à vos assises anciennes ou abîmées. De la réfection complète en crin végétal à la couverture simple, chaque projet est étudié pour respecter l'histoire du meuble tout en l'adaptant à votre intérieur actuel.",
         details: [
@@ -15,6 +17,7 @@ const prestationsData = [
     },
     {
         id: '02',
+        number: '02',
         title: "Rideaux & Voilages",
         description: "Habillez vos fenêtres sur-mesure pour créer une atmosphère unique, filtrer la lumière ou isoler vos pièces. Confection artisanale selon les règles de l'art.",
         details: [
@@ -26,6 +29,7 @@ const prestationsData = [
     },
     {
         id: '03',
+        number: '03',
         title: "Créations & Sur Mesure",
         description: "Des créations textiles personnalisées pour parfaire votre décoration et apporter du confort à chaque recoin de votre intérieur.",
         details: [
@@ -38,6 +42,23 @@ const prestationsData = [
 
 export default function Prestations() {
     const [hoveredId, setHoveredId] = useState(null);
+    const [prestationsData, setPrestationsData] = useState(DEFAULT_PRESTATIONS);
+
+    useEffect(() => {
+        const loadContent = async () => {
+            const { itemsBySection } = await fetchSiteContent('prestations');
+            const rows = getItems(itemsBySection, 'item', null);
+            if (!rows) return;
+            setPrestationsData(rows.map((row, idx) => ({
+                id: row.id,
+                number: String(idx + 1).padStart(2, '0'),
+                title: row.title,
+                description: row.text_value,
+                details: row.extra?.details || [],
+            })));
+        };
+        loadContent();
+    }, []);
 
     return (
         <div className="animate-in fade-in duration-1000 min-h-screen bg-background pt-32 pb-24 text-foreground flex flex-col justify-center">
@@ -66,7 +87,7 @@ export default function Prestations() {
                             {/* Left Side: Number + Title */}
                             <div className="flex items-baseline space-x-8 md:w-1/2">
                                 <span className="font-mono text-xl md:text-2xl text-muted-foreground transition-colors group-hover:text-primary">
-                                    {item.id}
+                                    {item.number}
                                 </span>
                                 <h2 className="font-editorial text-5xl md:text-7xl tracking-tighter transition-transform duration-500 group-hover:translate-x-4">
                                     {item.title}

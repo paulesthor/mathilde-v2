@@ -1,13 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabaseClient';
+import { fetchSiteContent, getText } from '../lib/siteContent';
 
 const INITIAL_FORM = { firstName: '', lastName: '', email: '', phone: '', message: '' };
+
+const DEFAULTS = {
+    heroTitle: 'Parlons Projet.',
+    heroSubtitle: "Pour une demande de devis, une question technique ou une prise de rendez-vous à l'atelier.",
+    contactEmail: 'contact@gesta-studio.com',
+    visitsText: 'Sur rendez-vous uniquement',
+};
 
 export default function Contact() {
     const [form, setForm] = useState(INITIAL_FORM);
     const [status, setStatus] = useState('idle'); // idle | submitting | success | error
     const [errorMsg, setErrorMsg] = useState('');
+    const [content, setContent] = useState(DEFAULTS);
+
+    useEffect(() => {
+        const loadContent = async () => {
+            const { blocks } = await fetchSiteContent('contact');
+            setContent({
+                heroTitle: getText(blocks, 'hero_title', DEFAULTS.heroTitle),
+                heroSubtitle: getText(blocks, 'hero_subtitle', DEFAULTS.heroSubtitle),
+                contactEmail: getText(blocks, 'contact_email', DEFAULTS.contactEmail),
+                visitsText: getText(blocks, 'visits_text', DEFAULTS.visitsText),
+            });
+        };
+        loadContent();
+    }, []);
 
     const handleChange = (e) => {
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -51,21 +73,21 @@ export default function Contact() {
             <div className="w-full lg:w-1/2 pt-32 pb-16 px-6 lg:px-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-border">
                 <div>
                     <h1 className="font-editorial text-7xl md:text-9xl tracking-tighter mix-blend-difference mb-12">
-                        Parlons <br /><span className="text-primary italic">Projet.</span>
+                        {content.heroTitle}
                     </h1>
                     <p className="font-sans text-xl md:text-2xl font-light text-muted-foreground max-w-md">
-                        Pour une demande de devis, une question technique ou une prise de rendez-vous à l'atelier.
+                        {content.heroSubtitle}
                     </p>
                 </div>
 
                 <div className="mt-24 space-y-8 font-mono text-sm tracking-widest uppercase">
                     <div>
                         <p className="text-muted-foreground mb-1">Email</p>
-                        <a href="mailto:contact@gesta-studio.com" className="text-foreground hover:text-primary transition-colors">contact@gesta-studio.com</a>
+                        <a href={`mailto:${content.contactEmail}`} className="text-foreground hover:text-primary transition-colors">{content.contactEmail}</a>
                     </div>
                     <div>
                         <p className="text-muted-foreground mb-1">Visites</p>
-                        <p className="text-foreground">Sur rendez-vous uniquement</p>
+                        <p className="text-foreground">{content.visitsText}</p>
                     </div>
                 </div>
             </div>

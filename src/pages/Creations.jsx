@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import MinimalModal from '../components/UI/MinimalModal';
+import { fetchSiteContent, getItems } from '../lib/siteContent';
 
-const creationsData = [
+const DEFAULT_CREATIONS = [
     {
         id: 1,
         title: "Coussin Plissé",
@@ -28,6 +29,23 @@ const creationsData = [
 
 export default function Creations() {
     const [selectedItem, setSelectedItem] = useState(null);
+    const [creationsData, setCreationsData] = useState(DEFAULT_CREATIONS);
+
+    useEffect(() => {
+        const loadContent = async () => {
+            const { itemsBySection } = await fetchSiteContent('creations');
+            const rows = getItems(itemsBySection, 'item', null);
+            if (!rows) return;
+            setCreationsData(rows.map((row) => ({
+                id: row.id,
+                title: row.title,
+                image: row.image_url,
+                description: row.text_value,
+                details: row.extra?.details || [],
+            })));
+        };
+        loadContent();
+    }, []);
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24 text-foreground">

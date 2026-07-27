@@ -16,6 +16,7 @@ import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminContacts from './pages/AdminContacts';
 import AdminSettings from './pages/AdminSettings';
+import AdminContent from './pages/AdminContent';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
 import Success from './pages/Success';
@@ -61,6 +62,7 @@ function App() {
             <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
             <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+            <Route path="/admin/content" element={<ProtectedRoute><AdminContent /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

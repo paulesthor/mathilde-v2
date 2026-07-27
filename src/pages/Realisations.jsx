@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import MinimalModal from '../components/UI/MinimalModal';
 import piece1 from '../assets/piece_1.webp';
 import piece2 from '../assets/piece_2.webp';
 import piece3 from '../assets/piece_3.webp';
+import { fetchSiteContent, getItems } from '../lib/siteContent';
 
-const realisationsData = [
+const FALLBACK_LOCAL_IMAGES = [piece1, piece2, piece3];
+
+const DEFAULT_REALISATIONS = [
     {
         id: 1,
         title: "Pièces sans fin",
@@ -43,6 +46,23 @@ const realisationsData = [
 
 export default function Realisations() {
     const [selectedItem, setSelectedItem] = useState(null);
+    const [realisationsData, setRealisationsData] = useState(DEFAULT_REALISATIONS);
+
+    useEffect(() => {
+        const loadContent = async () => {
+            const { itemsBySection } = await fetchSiteContent('realisations');
+            const rows = getItems(itemsBySection, 'item', null);
+            if (!rows) return;
+            setRealisationsData(rows.map((row, idx) => ({
+                id: row.id,
+                title: row.title,
+                image: row.image_url || FALLBACK_LOCAL_IMAGES[idx] || FALLBACK_LOCAL_IMAGES[0],
+                description: row.text_value,
+                details: row.extra?.details || [],
+            })));
+        };
+        loadContent();
+    }, []);
 
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24">
