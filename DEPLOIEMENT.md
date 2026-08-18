@@ -16,6 +16,7 @@ Ce document liste tout ce qui reste à faire pour passer du site actuel (fonctio
 Table `products` : à vérifier qu'elle existe déjà avec les colonnes attendues (`title, price, quantity, description, image_url, stripe_payment_link, stripe_payment_link_id, stripe_product_id, status, created_at`) — elle n'a pas de script de création dans ce repo (créée manuellement au démarrage du projet).
 
 - [ ] Créer le bucket de stockage **`products`** (accès public en lecture) pour l'upload des photos depuis l'admin.
+- [ ] `supabase/migrations/20260727_site_content.sql` — contenu éditorial (textes/photos) modifiable par la cliente + bucket **`site-content`**
 
 ## 2. Comptes & clés à configurer
 

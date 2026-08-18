@@ -23,6 +23,8 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import { ToastProvider } from './contexts/ToastContext';
+import { EditModeProvider } from './contexts/EditModeContext';
+import EditModeToggle from './components/Editable/EditModeToggle';
 
 // Placeholder Pages
 
@@ -35,6 +37,7 @@ function App() {
   return (
     <HelmetProvider>
     <ToastProvider>
+    <EditModeProvider>
     <HashRouter>
       <ScrollToTop />
       <div className="flex min-h-screen flex-col">
@@ -66,8 +69,10 @@ function App() {
         </main>
 
         <MinimalFooter />
+        <EditModeToggle />
       </div>
     </HashRouter>
+    </EditModeProvider>
     </ToastProvider>
     </HelmetProvider>
   );

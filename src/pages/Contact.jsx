@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabaseClient';
+import { useEditMode } from '../contexts/EditModeContext';
+import EditableText from '../components/Editable/EditableText';
 
 const INITIAL_FORM = { firstName: '', lastName: '', email: '', phone: '', message: '' };
 
 export default function Contact() {
+    const { isEditMode } = useEditMode();
     const [form, setForm] = useState(INITIAL_FORM);
     const [status, setStatus] = useState('idle'); // idle | submitting | success | error
     const [errorMsg, setErrorMsg] = useState('');
@@ -51,21 +54,25 @@ export default function Contact() {
             <div className="w-full lg:w-1/2 pt-32 pb-16 px-6 lg:px-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-border">
                 <div>
                     <h1 className="font-editorial text-7xl md:text-9xl tracking-tighter mix-blend-difference mb-12">
-                        Parlons <br /><span className="text-primary italic">Projet.</span>
+                        <EditableText page="contact" section="hero_title" fallback="Parlons Projet." as="span" multiline={false} />
                     </h1>
                     <p className="font-sans text-xl md:text-2xl font-light text-muted-foreground max-w-md">
-                        Pour une demande de devis, une question technique ou une prise de rendez-vous à l'atelier.
+                        <EditableText page="contact" section="hero_subtitle" fallback="Pour une demande de devis, une question technique ou une prise de rendez-vous à l'atelier." as="span" />
                     </p>
                 </div>
 
                 <div className="mt-24 space-y-8 font-mono text-sm tracking-widest uppercase">
                     <div>
                         <p className="text-muted-foreground mb-1">Email</p>
-                        <a href="mailto:contact@gesta-studio.com" className="text-foreground hover:text-primary transition-colors">contact@gesta-studio.com</a>
+                        <a href="mailto:contact@gesta-studio.com" className="text-foreground hover:text-primary transition-colors" onClick={(e) => isEditMode && e.preventDefault()}>
+                            <EditableText page="contact" section="contact_email" fallback="contact@gesta-studio.com" as="span" multiline={false} />
+                        </a>
                     </div>
                     <div>
                         <p className="text-muted-foreground mb-1">Visites</p>
-                        <p className="text-foreground">Sur rendez-vous uniquement</p>
+                        <p className="text-foreground">
+                            <EditableText page="contact" section="visits_text" fallback="Sur rendez-vous uniquement" as="span" multiline={false} />
+                        </p>
                     </div>
                 </div>
             </div>

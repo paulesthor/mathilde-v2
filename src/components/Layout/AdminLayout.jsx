@@ -1,9 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Package, ShoppingBag, Star, MessageSquare, Settings, LogOut, Bell, BellOff } from 'lucide-react';
+import { Package, ShoppingBag, Star, MessageSquare, Settings, LogOut, Bell, BellOff, Pencil } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { useAdminCounts } from '../../hooks/useAdminCounts';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
+import { useEditMode } from '../../contexts/EditModeContext';
 
 function Badge({ count }) {
     if (!count) return null;
@@ -19,6 +20,7 @@ const TABS = [
     { id: 'orders',   label: 'Commandes', icon: ShoppingBag,   path: '/admin/orders',   countKey: 'orders' },
     { id: 'reviews',  label: 'Avis',      icon: Star,          path: '/admin/reviews',  countKey: 'reviews' },
     { id: 'contacts', label: 'Demandes',  icon: MessageSquare, path: '/admin/contacts', countKey: 'contacts' },
+    { id: 'content',  label: 'Modifier site', icon: Pencil,  path: '/',               countKey: null, isEditLink: true },
     { id: 'settings', label: 'Réglages',  icon: Settings,      path: '/admin/settings', countKey: null },
 ];
 
@@ -26,6 +28,7 @@ export default function AdminLayout({ children, activeTab, title }) {
     const navigate = useNavigate();
     const counts = useAdminCounts();
     const { status: pushStatus, subscribe, unsubscribe } = usePushSubscription();
+    const { setIsEditMode } = useEditMode();
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -101,16 +104,17 @@ export default function AdminLayout({ children, activeTab, title }) {
 
             {/* Bottom tab bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border grid grid-cols-5"
+                className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border grid grid-cols-6"
                 style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
-                {TABS.map(({ id, label, icon: Icon, path, countKey }) => {
+                {TABS.map(({ id, label, icon: Icon, path, countKey, isEditLink }) => {
                     const isActive = activeTab === id;
                     const count = countKey ? counts[countKey] : 0;
                     return (
                         <Link
                             key={id}
                             to={path}
+                            onClick={isEditLink ? () => setIsEditMode(true) : undefined}
                             className={`flex flex-col items-center justify-center gap-1 py-3 relative transition-colors ${
                                 isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                             }`}

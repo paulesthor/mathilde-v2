@@ -6,9 +6,13 @@ import HeroCarousel from '../components/UI/HeroCarousel';
 import portraitMathilde from '../assets/portrait_mathilde.webp';
 import { supabase } from '../utils/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
+import { useEditMode } from '../contexts/EditModeContext';
+import EditableText from '../components/Editable/EditableText';
+import EditableImage from '../components/Editable/EditableImage';
 
 export default function Home() {
     const { showToast } = useToast();
+    const { isEditMode } = useEditMode();
     const [reviews, setReviews] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     
@@ -127,10 +131,13 @@ export default function Home() {
                     {/* ── COLONNE GAUCHE : portrait propriétaire ── */}
                     <div className="hero-portrait-col">
                         <div className="hero-portrait-frame">
-                            <img
-                                src={portraitMathilde}
+                            <EditableImage
+                                page="home"
+                                section="portrait_image"
+                                fallback={portraitMathilde}
                                 alt="Mathilde, fondatrice de l'Atelier Gesta"
-                                className="hero-portrait-img"
+                                className="w-full h-full"
+                                imgClassName="hero-portrait-img"
                             />
                             {/* overlay très léger */}
                             <div className="hero-portrait-overlay" />
@@ -138,16 +145,16 @@ export default function Home() {
 
                         {/* Nom flottant sous le portrait, légèrement décalé */}
                         <div className="hero-portrait-credit">
-                            <span className="hero-portrait-name">Mathilde</span>
-                            <span className="hero-portrait-role">Artisane Tapissière · Atelier Gesta</span>
+                            <EditableText page="home" section="portrait_name" fallback="Mathilde" as="span" className="hero-portrait-name" multiline={false} />
+                            <EditableText page="home" section="portrait_role" fallback="Artisane Tapissière · Atelier Gesta" as="span" className="hero-portrait-role" multiline={false} />
                         </div>
                     </div>
 
                     {/* ── COLONNE CENTRALE : texte éditorial ── */}
                     <div className="hero-text-col">
-                        <p className="hero-eyebrow">Atelier de Tapisserie d'Ameublement</p>
+                        <EditableText page="home" section="hero_eyebrow" fallback="Atelier de Tapisserie d'Ameublement" as="p" className="hero-eyebrow" multiline={false} />
                         <h1 className="hero-h1">
-                            Adopter une décoration qui vous ressemble et faites revenir la couleur dans votre intérieur.
+                            <EditableText page="home" section="hero_title" fallback="Adopter une décoration qui vous ressemble et faites revenir la couleur dans votre intérieur." as="span" />
                         </h1>
                         <div className="hero-contact-card">
                             <div className="hero-contact-block">
@@ -166,8 +173,8 @@ export default function Home() {
                                 </a>
                             </div>
                         </div>
-                        <Link to="/about" className="hero-cta">
-                            Découvrir l'Atelier
+                        <Link to="/about" className="hero-cta" onClick={(e) => isEditMode && e.preventDefault()}>
+                            <EditableText page="home" section="cta_about_label" fallback="Découvrir l'Atelier" as="span" multiline={false} />
                         </Link>
                     </div>
 
@@ -185,11 +192,11 @@ export default function Home() {
             <section className="editorial-section">
                 <div className="editorial-inner">
                     <h2 className="editorial-h2">
-                        Allier savoir-faire artisanal, sensibilité esthétique et approche contemporaine du mobilier.
+                        <EditableText page="home" section="editorial_citation" fallback="Allier savoir-faire artisanal, sensibilité esthétique et approche contemporaine du mobilier." as="span" />
                     </h2>
                     <div className="mt-16">
-                        <Link to="/about" className="editorial-link">
-                            Découvrir l'Atelier
+                        <Link to="/about" className="editorial-link" onClick={(e) => isEditMode && e.preventDefault()}>
+                            <EditableText page="home" section="cta_about_label" fallback="Découvrir l'Atelier" as="span" multiline={false} />
                         </Link>
                     </div>
                 </div>
@@ -199,10 +206,10 @@ export default function Home() {
             <section className="reviews-section py-24 border-t border-border/60 overflow-hidden bg-muted/10">
                 <div className="mx-auto max-w-[1600px] px-6 lg:px-12 mb-16">
                     <span className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
-                        Témoignages
+                        <EditableText page="home" section="reviews_eyebrow" fallback="Témoignages" as="span" multiline={false} />
                     </span>
                     <h2 className="font-editorial text-4xl md:text-6xl mt-4">
-                        Ils font confiance à l'Atelier.
+                        <EditableText page="home" section="reviews_heading" fallback="Ils font confiance à l'Atelier." as="span" />
                     </h2>
                 </div>
                 
@@ -337,10 +344,10 @@ export default function Home() {
             <section className="cta-section">
                 <div className="cta-inner">
                     <h2 className="cta-h2">
-                        Vous avez un projet de restauration ou de confection ?
+                        <EditableText page="home" section="cta_heading" fallback="Vous avez un projet de restauration ou de confection ?" as="span" />
                     </h2>
-                    <Link to="/contact" className="cta-btn">
-                        Discutons-en
+                    <Link to="/contact" className="cta-btn" onClick={(e) => isEditMode && e.preventDefault()}>
+                        <EditableText page="home" section="cta_contact_label" fallback="Discutons-en" as="span" multiline={false} />
                     </Link>
                 </div>
             </section>

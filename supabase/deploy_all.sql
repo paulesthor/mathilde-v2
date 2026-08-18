@@ -116,3 +116,83 @@ ALTER TABLE products
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('products', 'products', true)
 ON CONFLICT (id) DO NOTHING;
+
+-- 8. Contenu éditorial du site pilotable par l'admin (20260727_site_content.sql)
+CREATE TABLE IF NOT EXISTS site_content (
+  id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  page         text        NOT NULL
+                           CHECK (page IN ('home', 'about', 'realisations', 'creations', 'prestations', 'contact')),
+  section      text        NOT NULL,
+  kind         text        NOT NULL DEFAULT 'text'
+                           CHECK (kind IN ('text', 'image', 'list_item')),
+  title        text,
+  text_value   text,
+  image_url    text,
+  extra        jsonb,
+  sort_order   int         NOT NULL DEFAULT 0,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS site_content_singleton_key
+  ON site_content (page, section)
+  WHERE kind <> 'list_item';
+
+CREATE OR REPLACE FUNCTION set_site_content_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS site_content_set_updated_at ON site_content;
+CREATE TRIGGER site_content_set_updated_at
+  BEFORE UPDATE ON site_content
+  FOR EACH ROW EXECUTE FUNCTION set_site_content_updated_at();
+
+ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read site content" ON site_content;
+CREATE POLICY "Public read site content"
+  ON site_content FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admin insert site content" ON site_content;
+CREATE POLICY "Admin insert site content"
+  ON site_content FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admin update site content" ON site_content;
+CREATE POLICY "Admin update site content"
+  ON site_content FOR UPDATE USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admin delete site content" ON site_content;
+CREATE POLICY "Admin delete site content"
+  ON site_content FOR DELETE USING (auth.role() = 'authenticated');
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('site-content', 'site-content', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Public read site-content bucket" ON storage.objects;
+CREATE POLICY "Public read site-content bucket"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'site-content');
+
+DROP POLICY IF EXISTS "Admin insert site-content bucket" ON storage.objects;
+CREATE POLICY "Admin insert site-content bucket"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'site-content' AND auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admin update site-content bucket" ON storage.objects;
+CREATE POLICY "Admin update site-content bucket"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'site-content' AND auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admin delete site-content bucket" ON storage.objects;
+CREATE POLICY "Admin delete site-content bucket"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'site-content' AND auth.role() = 'authenticated');
+
+-- Seed des listes existantes : voir supabase/migrations/20260727_site_content.sql
+-- (bloc DO idempotent non dupliqué ici pour garder ce script consolidé lisible ;
+-- si la table est vide après ce script, exécuter aussi ce fichier de migration).
