@@ -134,8 +134,9 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('create-stripe-link error:', (error as Error).message)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Erreur serveur lors de la création du lien de paiement.' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

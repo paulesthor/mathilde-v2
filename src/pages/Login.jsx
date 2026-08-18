@@ -48,8 +48,8 @@ export default function Login() {
                 });
                 if (authError) throw authError;
                 navigate('/admin/products');
-            } catch (err) {
-                setError(err.message || "Identifiants ou mot de passe incorrect.");
+            } catch {
+                setError("Identifiants ou mot de passe incorrect.");
             } finally {
                 setLoading(false);
             }
