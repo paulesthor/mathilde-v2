@@ -46,17 +46,17 @@
   z-index: 0;
 }
 
-/* Grid principal : 3 colonnes asymétriques */
+/* Grid principal : portrait + texte, la galerie qui défile est en contrebas */
 .hero-inner {
   position: relative;
   z-index: 1;
-  max-width: 1500px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 3rem 3rem;
+  padding: 2rem 3rem 1rem;
   display: grid;
-  grid-template-columns: 1fr 1.1fr 1fr;
+  grid-template-columns: 0.85fr 1.3fr;
   align-items: center;
-  gap: 3rem;
+  gap: 4rem;
 }
 
 /* ── Portrait gauche ── */
@@ -231,35 +231,34 @@
   border-color: #9A8C78;
 }
 
-/* ── Colonne carrousel droite ── */
-.hero-carousel-col {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  /* Décalage vers le haut — crée l'asymétrie organique */
-  margin-top: -5vh;
+/* ── Galerie qui défile, en contrebas, format paysage ── */
+.hero-carousel-section {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 2.5rem auto 0;
+  padding: 0 3rem;
 }
 
-/* ─── CARROUSEL ─── */
 .hero-carousel-wrapper {
   position: relative;
   width: 100%;
   max-width: 100%;
-  /* Légère rotation opposée au portrait */
-  transform: rotate(1.4deg);
+  /* Légère rotation organique, plus discrète en format paysage */
+  transform: rotate(0.6deg);
   transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .hero-carousel-wrapper:hover {
-  transform: rotate(0.3deg) scale(1.012);
+  transform: rotate(0deg) scale(1.008);
 }
 
 .hero-carousel-img-container {
   width: 100%;
-  /* Ratio identique au portrait */
-  aspect-ratio: 2 / 3;
+  /* Format paysage */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  box-shadow: -10px 18px 55px rgba(0,0,0,0.11), 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05);
   position: relative;
 }
 
@@ -301,11 +300,13 @@
   height: 5px;
   border-radius: 50%;
   background: #888;
+  /* Le padding n'agrandit que la zone cliquable (24×24px min) :
+     background-clip garde le point visuellement petit. */
+  background-clip: content-box;
   border: none;
   cursor: pointer;
   transition: background 0.3s ease, transform 0.3s ease;
-  /* Padding for 24×24px minimum touch target */
-  padding: 10px;
+  padding: 9px;
   box-sizing: content-box;
 }
 
@@ -445,32 +446,21 @@
 ════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .hero-inner {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 2rem;
+    gap: 2.5rem;
+    padding: 2rem 2rem 1rem;
   }
 
   .hero-portrait-col {
-    grid-column: 1;
-    grid-row: 1;
     margin-top: 2rem;
   }
 
   .hero-text-col {
-    grid-column: 2;
-    grid-row: 1;
     padding-top: 2rem;
   }
 
-  .hero-carousel-col {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-content: center;
-    margin-top: 0;
-  }
-
-  .hero-carousel-wrapper {
-    max-width: 260px;
+  .hero-carousel-section {
+    max-width: 640px;
+    padding: 0 2rem;
   }
 }
 
@@ -480,21 +470,17 @@
   }
 
   .hero-portrait-col {
-    grid-column: 1;
     grid-row: 2;
     margin-top: 0;
     align-items: center;
   }
 
   .hero-text-col {
-    grid-column: 1;
     grid-row: 1;
   }
 
-  .hero-carousel-col {
-    grid-column: 1;
-    grid-row: 3;
-    justify-content: center;
+  .hero-carousel-section {
+    padding: 0 1.25rem;
   }
 
   .hero-portrait-frame,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Trash } from 'lucide-react';
 import piece1 from '../../assets/piece_1.webp';
 import piece2 from '../../assets/piece_2.webp';
@@ -40,17 +40,8 @@ export default function HeroCarousel() {
 
   useEffect(() => { loadRows(); }, []);
 
-  const goTo = (index) => {
-    if (animating) return;
-    setAnimating(true);
-    setTimeout(() => {
-      setCurrent(index);
-      setAnimating(false);
-    }, 500);
-  };
-
-  useEffect(() => {
-    if (isEditMode) return; // pause l'auto-rotation pendant l'édition
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setAnimating(true);
       setTimeout(() => {
@@ -58,8 +49,25 @@ export default function HeroCarousel() {
         setAnimating(false);
       }, 500);
     }, INTERVAL_MS);
+  }, [rows.length]);
+
+  const goTo = (index) => {
+    if (animating || index === current) return;
+    setAnimating(true);
+    setTimeout(() => {
+      setCurrent(index);
+      setAnimating(false);
+    }, 500);
+    // Repart d'un intervalle complet après une navigation manuelle, sinon
+    // l'auto-rotation pouvait retomber juste derrière et écraser le clic.
+    if (!isEditMode) startTimer();
+  };
+
+  useEffect(() => {
+    if (isEditMode) return; // pause l'auto-rotation pendant l'édition
+    startTimer();
     return () => clearInterval(timerRef.current);
-  }, [rows.length, isEditMode]);
+  }, [isEditMode, startTimer]);
 
   const currentRow = rows[current] || rows[0];
   const currentSrc = currentRow?.image_url || FALLBACK_LOCAL_IMAGES[current] || FALLBACK_LOCAL_IMAGES[0];

@@ -177,11 +177,11 @@ export default function Home() {
                             <EditableText page="home" section="cta_about_label" fallback="Découvrir l'Atelier" as="span" multiline={false} />
                         </Link>
                     </div>
+                </div>
 
-                    {/* ── COLONNE DROITE : carrousel ── */}
-                    <div className="hero-carousel-col">
-                        <HeroCarousel />
-                    </div>
+                {/* ── Galerie photos qui défilent, en contrebas, format paysage ── */}
+                <div className="hero-carousel-section">
+                    <HeroCarousel />
                 </div>
 
                 {/* Ligne décorative bas-de-page éditoriale */}
