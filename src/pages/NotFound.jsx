@@ -4,7 +4,7 @@ import { Compass } from 'lucide-react';
 
 export default function NotFound() {
     return (
-        <div className="min-h-screen flex items-center justify-center px-6 py-24">
+        <div className="min-h-full flex items-center justify-center px-6 py-16">
             <Helmet>
                 <title>Page introuvable — Atelier Gesta</title>
                 <meta name="robots" content="noindex" />

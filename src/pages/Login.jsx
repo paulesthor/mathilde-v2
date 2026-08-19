@@ -57,7 +57,7 @@ export default function Login() {
     };
 
     return (
-        <div className="animate-in fade-in duration-1000 bg-background min-h-screen flex items-center justify-center text-foreground px-6 py-24">
+        <div className="animate-in fade-in duration-1000 bg-background min-h-full flex items-center justify-center text-foreground px-6 py-16">
             <Helmet>
                 <title>Connexion — Admin Gesta</title>
                 <meta name="robots" content="noindex, nofollow" />

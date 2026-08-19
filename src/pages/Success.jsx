@@ -42,7 +42,7 @@ export default function Success() {
     const address = formatAddress(summary?.shipping_address);
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-6 py-24">
+        <div className="min-h-full flex items-center justify-center px-6 py-24">
             <Helmet>
                 <title>Commande confirmée — Atelier Gesta</title>
             </Helmet>

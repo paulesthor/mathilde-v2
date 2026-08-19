@@ -44,14 +44,14 @@ export default function Contact() {
     };
 
     return (
-        <div className="animate-in fade-in duration-1000 bg-background min-h-[90vh] flex flex-col lg:flex-row">
+        <div className="animate-in fade-in duration-1000 bg-background min-h-full flex flex-col lg:flex-row">
             <Helmet>
                 <title>Contact & Devis | Atelier Gesta</title>
                 <meta name="description" content="Contactez l'Atelier Gesta pour un devis de rénovation, une question ou un rendez-vous à l'atelier à Paris." />
             </Helmet>
 
             {/* Côté gauche — Infos */}
-            <div className="w-full lg:w-1/2 pt-32 pb-16 px-6 lg:px-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-border">
+            <div className="w-full lg:w-1/2 pt-24 pb-12 px-6 lg:px-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-border">
                 <div>
                     <h1 className="font-editorial text-7xl md:text-9xl tracking-tighter mix-blend-difference mb-12">
                         <EditableText page="contact" section="hero_title" fallback="Parlons Projet." as="span" multiline={false} />
@@ -78,7 +78,7 @@ export default function Contact() {
             </div>
 
             {/* Côté droit — Formulaire */}
-            <div className="w-full lg:w-1/2 pt-16 pb-24 lg:py-32 px-6 lg:px-24 flex items-center justify-center">
+            <div className="w-full lg:w-1/2 pt-12 pb-16 lg:py-20 px-6 lg:px-24 flex items-center justify-center">
 
                 {status === 'success' ? (
                     <div className="w-full max-w-xl text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">

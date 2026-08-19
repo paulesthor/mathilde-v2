@@ -21,7 +21,7 @@ const DEFAULT_PHILOSOPHY = [
 
 export default function About() {
     return (
-        <div className="animate-in fade-in duration-1000 bg-background min-h-screen">
+        <div className="animate-in fade-in duration-1000 bg-background min-h-full">
             <Helmet>
                 <title>L'Atelier & Mathilde — À propos | Atelier Gesta</title>
                 <meta name="description" content="Découvrez Mathilde et l'Atelier Gesta, atelier parisien de tapisserie d'ameublement. Passion, savoir-faire artisanal et créations sur-mesure." />
