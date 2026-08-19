@@ -1,0 +1,93 @@
+name: Debug — Black-box RLS test (temporary)
+
+# Vérifie, avec la seule clé publique (anon), que les écritures/lectures
+# admin sont bien bloquées côté serveur (RLS) et pas seulement cachées
+# côté navigateur. N'utilise PAS le token de management Supabase.
+
+on:
+  workflow_dispatch: {}
+
+env:
+  SUPABASE_URL: https://dekmujrzeverlmnzjzbh.supabase.co
+  ANON_KEY: sb_publishable_wn5u1hNh-ohebCgqe5VhTQ_BYq74N7o
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tests RLS anonymes
+        run: |
+          set -e
+          H_APIKEY="apikey: $ANON_KEY"
+          H_AUTH="Authorization: Bearer $ANON_KEY"
+          H_JSON="Content-Type: application/json"
+
+          echo "===== 1. Lecture publique des produits (attendu : OK, données visibles) ====="
+          PROD=$(curl -sS "$SUPABASE_URL/rest/v1/products?select=id,title,price&limit=1" -H "$H_APIKEY" -H "$H_AUTH")
+          echo "$PROD"
+          PROD_ID=$(echo "$PROD" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          PROD_PRICE=$(echo "$PROD" | grep -o '"price":[0-9.]*' | head -1 | cut -d: -f2)
+          echo "produit test id=$PROD_ID price=$PROD_PRICE"
+
+          echo "===== 2. UPDATE anonyme sur un produit existant (attendu : bloqué, prix inchangé) ====="
+          curl -sS -X PATCH "$SUPABASE_URL/rest/v1/products?id=eq.$PROD_ID" \
+            -H "$H_APIKEY" -H "$H_AUTH" -H "$H_JSON" -H "Prefer: return=representation" \
+            -d '{"price": 999999}'
+          echo ""
+          PROD_AFTER=$(curl -sS "$SUPABASE_URL/rest/v1/products?id=eq.$PROD_ID&select=price" -H "$H_APIKEY" -H "$H_AUTH")
+          echo "prix après tentative: $PROD_AFTER"
+          if echo "$PROD_AFTER" | grep -q '"price":999999'; then
+            echo "::error::VULNERABILITE — un visiteur anonyme a pu modifier le prix d'un produit !"
+            curl -sS -X PATCH "$SUPABASE_URL/rest/v1/products?id=eq.$PROD_ID" -H "$H_APIKEY" -H "$H_AUTH" -H "$H_JSON" -d "{\"price\": $PROD_PRICE}" > /dev/null
+            echo "(prix restauré à $PROD_PRICE)"
+          else
+            echo "OK — UPDATE anonyme bloqué"
+          fi
+
+          echo "===== 3. INSERT anonyme d'un faux produit (attendu : bloqué) ====="
+          INSERT_RESP=$(curl -sS -w "\nHTTP:%{http_code}" -X POST "$SUPABASE_URL/rest/v1/products" \
+            -H "$H_APIKEY" -H "$H_AUTH" -H "$H_JSON" -H "Prefer: return=representation" \
+            -d '{"title":"ZZZ-RLS-TEST-DELETE-ME","price":1,"quantity":1,"status":"available"}')
+          echo "$INSERT_RESP"
+          NEW_ID=$(echo "$INSERT_RESP" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          if [ -n "$NEW_ID" ]; then
+            echo "::error::VULNERABILITE — un visiteur anonyme a pu créer un produit (id=$NEW_ID) !"
+            curl -sS -X DELETE "$SUPABASE_URL/rest/v1/products?id=eq.$NEW_ID" -H "$H_APIKEY" -H "$H_AUTH" > /dev/null
+            echo "(ligne de test supprimée)"
+          else
+            echo "OK — INSERT anonyme bloqué"
+          fi
+
+          echo "===== 4. INSERT anonyme direct dans reviews, en contournant submit-review (attendu : bloqué) ====="
+          REV_RESP=$(curl -sS -w "\nHTTP:%{http_code}" -X POST "$SUPABASE_URL/rest/v1/reviews" \
+            -H "$H_APIKEY" -H "$H_AUTH" -H "$H_JSON" -H "Prefer: return=representation" \
+            -d '{"author_name":"ZZZ-RLS-TEST-DELETE-ME","content":"Test de securite automatique, a supprimer.","rating":5,"status":"pending","source":"local"}')
+          echo "$REV_RESP"
+          REV_ID=$(echo "$REV_RESP" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          if [ -n "$REV_ID" ]; then
+            echo "::warning::INSERT anonyme direct dans reviews accepté (id=$REV_ID) — contourne submit-review, à corriger."
+            curl -sS -X DELETE "$SUPABASE_URL/rest/v1/reviews?id=eq.$REV_ID" -H "$H_APIKEY" -H "$H_AUTH" > /dev/null
+            echo "(ligne de test supprimée)"
+          else
+            echo "OK — INSERT anonyme direct bloqué (passage obligé par submit-review)"
+          fi
+
+          echo "===== 5. Lecture anonyme des commandes (orders) — attendu : vide, données clients cachées ====="
+          ORDERS=$(curl -sS "$SUPABASE_URL/rest/v1/orders?select=id&limit=5" -H "$H_APIKEY" -H "$H_AUTH")
+          echo "$ORDERS"
+          if [ "$ORDERS" = "[]" ]; then
+            echo "OK — aucune commande visible en anonyme"
+          else
+            echo "::error::VULNERABILITE POTENTIELLE — des commandes sont visibles sans authentification !"
+          fi
+
+          echo "===== 6. Lecture anonyme des demandes de contact — attendu : vide ====="
+          CONTACTS=$(curl -sS "$SUPABASE_URL/rest/v1/contact_requests?select=id&limit=5" -H "$H_APIKEY" -H "$H_AUTH")
+          echo "$CONTACTS"
+          if [ "$CONTACTS" = "[]" ]; then
+            echo "OK — aucune demande de contact visible en anonyme"
+          else
+            echo "::error::VULNERABILITE POTENTIELLE — des demandes de contact sont visibles sans authentification !"
+          fi
+
+          echo "===== FIN DES TESTS ====="
