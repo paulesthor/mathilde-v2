@@ -231,6 +231,16 @@
   border-color: #9A8C78;
 }
 
+/* Délimitation discrète entre l'intro (portrait + texte) et la galerie */
+.hero-section-divider {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 2.5rem auto 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #D8CFC0 15%, #D8CFC0 85%, transparent);
+}
+
 /* ── Galerie qui défile, en contrebas, format paysage ── */
 .hero-carousel-section {
   position: relative;
@@ -311,7 +321,10 @@
 }
 
 .hero-carousel-dot.active {
-  background: #9A8C78;
+  /* background-color (et non le raccourci background) pour ne pas
+     réinitialiser background-clip: content-box hérité et faire
+     réapparaître un rond géant sur le padding du tap target. */
+  background-color: #9A8C78;
   transform: scale(1.5);
 }
 

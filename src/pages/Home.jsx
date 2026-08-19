@@ -179,6 +179,9 @@ export default function Home() {
                     </div>
                 </div>
 
+                {/* Délimitation discrète entre l'intro (portrait + texte) et la galerie */}
+                <div className="hero-section-divider" />
+
                 {/* ── Galerie photos qui défilent, en contrebas, format paysage ── */}
                 <div className="hero-carousel-section">
                     <HeroCarousel />
