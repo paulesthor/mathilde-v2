@@ -168,12 +168,14 @@ export default function AdminReviews() {
                         </h1>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-muted/30 border border-border/80 px-4 py-3 rounded-lg">
-                        <Database className={`h-5 w-5 ${isUsingMock ? 'text-amber-500' : 'text-emerald-500'}`} />
-                        <span className="font-mono text-xs uppercase tracking-widest">
-                            {isUsingMock ? 'Mode Simulation' : 'Supabase Connecté'}
-                        </span>
-                    </div>
+                    {isUsingMock && (
+                        <div className="flex items-center gap-3 bg-muted/30 border border-border/80 px-4 py-3 rounded-lg">
+                            <Database className="h-5 w-5 text-amber-500" />
+                            <span className="font-mono text-xs uppercase tracking-widest">
+                                Mode Simulation
+                            </span>
+                        </div>
+                    )}
                 </header>
 
                 {isUsingMock && (

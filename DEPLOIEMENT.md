@@ -85,7 +85,15 @@ Toutes les fonctions dans `supabase/functions/` doivent être déployées (`supa
 - [x] Dépendances vulnérables corrigées (`react-router-dom`, `vite` — 10 vulnérabilités npm audit résolues)
 - [ ] `robots.txt` autorise actuellement l'indexation de tout le site (`Allow: /`) : envisager d'exclure `/admin` par précaution, même si le `HashRouter` limite déjà l'indexation réelle de ces routes par Google
 
-## 9. À faire en toute fin de projet (une fois tout stabilisé)
+## 9. Page « site indisponible » (en cas de panne)
+
+- Une page statique existe à `https://paulesthor.github.io/mathilde-v2/maintenance.html` (fichier `public/maintenance.html`). Elle ne dépend pas de React/JS : même si tout le reste du site plante (build cassé, panne Supabase qui empêche l'app de démarrer), cette page continue de fonctionner puisqu'elle est servie telle quelle par GitHub Pages.
+- En cas de panne visible pour les visiteurs, deux options :
+  1. **Rediriger vers cette page directement** — partager le lien `.../maintenance.html` (réseaux sociaux, réponse automatique email) pendant la résolution du problème.
+  2. **La mettre à la place de la page d'accueil** — dans le pire des cas (site totalement cassé plus d'une journée), copier son contenu dans `dist/index.html` avant de redéployer sur `gh-pages`, le temps de corriger, puis revenir en arrière.
+- Contient un message d'excuse + les coordonnées de contact (email et Instagram) pour que les visiteurs puissent joindre l'atelier en attendant.
+
+## 10. À faire en toute fin de projet (une fois tout stabilisé)
 
 - [ ] **Supprimer ou restreindre le workflow `.github/workflows/run-sql.yml`** — c'est un outil de maintenance ponctuelle qui permet d'exécuter n'importe quelle requête SQL sur la base de production via un déclenchement manuel GitHub. Utile pendant le déploiement initial, mais à retirer une fois que tout est stable pour ne pas laisser cet accès total traîner indéfiniment.
 - [ ] Révoquer/faire tourner le token d'accès personnel Supabase utilisé pour le déploiement initial une fois qu'il n'est plus nécessaire.
