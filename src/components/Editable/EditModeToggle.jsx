@@ -24,7 +24,7 @@ export default function EditModeToggle() {
                     <Link
                         to="/admin/products"
                         onClick={() => setIsEditMode(false)}
-                        className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg font-mono text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-primary transition-colors"
+                        className="touch-manipulation flex items-center gap-2 px-4 py-3 rounded-full shadow-lg font-mono text-[10px] uppercase tracking-widest bg-foreground text-background hover:bg-primary transition-colors"
                     >
                         <LayoutDashboard className="h-4 w-4" />
                         Retour à l'admin
@@ -32,8 +32,9 @@ export default function EditModeToggle() {
                 </>
             )}
             <button
+                type="button"
                 onClick={() => setIsEditMode(!isEditMode)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-full shadow-lg font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                className={`touch-manipulation flex items-center gap-2 px-4 py-3 rounded-full shadow-lg font-mono text-[10px] uppercase tracking-widest transition-colors ${
                     isEditMode ? 'bg-rose-500 text-white hover:bg-rose-600' : 'bg-foreground text-background hover:bg-primary'
                 }`}
             >

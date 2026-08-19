@@ -21,9 +21,10 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                 {/* Header inside Menu */}
                 <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-end px-6 lg:px-12">
                     <button
+                        type="button"
                         onClick={onClose}
                         aria-label="Fermer le menu"
-                        className="group flex cursor-pointer items-center space-x-3 transition-opacity hover:text-primary"
+                        className="touch-manipulation group flex cursor-pointer items-center space-x-3 transition-opacity hover:text-primary"
                     >
                         <span className="hidden font-mono text-sm tracking-widest uppercase md:block">
                             Fermer
@@ -40,7 +41,7 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                                 key={link.name}
                                 to={link.path}
                                 onClick={onClose}
-                                className="group relative inline-block overflow-hidden"
+                                className="touch-manipulation group relative inline-block overflow-hidden"
                             >
                                 <div className="flex items-baseline space-x-4">
                                     <span className="font-mono text-sm text-foreground/30 transition-colors group-hover:text-primary">

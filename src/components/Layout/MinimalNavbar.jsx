@@ -6,13 +6,14 @@ export default function MinimalNavbar({ onMenuClick }) {
     return (
         <header className="fixed top-0 z-40 w-full mix-blend-difference text-white">
             <div className="mx-auto flex h-24 max-w-[1600px] items-center justify-between px-6 lg:px-12">
-                <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-70">
+                <Link to="/" className="touch-manipulation flex items-center gap-2 transition-opacity hover:opacity-70">
                     <img src={logo} alt="Gesta Logo" className="h-8 md:h-12 w-auto invert" />
                 </Link>
                 <button
+                    type="button"
                     onClick={onMenuClick}
                     aria-label="Ouvrir le menu"
-                    className="group flex cursor-pointer items-center space-x-3 transition-opacity hover:opacity-70"
+                    className="touch-manipulation group flex cursor-pointer items-center space-x-3 transition-opacity hover:opacity-70"
                 >
                     <span className="hidden font-mono text-sm tracking-widest uppercase md:block">
                         Menu
