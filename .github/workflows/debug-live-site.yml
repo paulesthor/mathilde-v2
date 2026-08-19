@@ -1,0 +1,36 @@
+name: Debug — Inspect live site (temporary)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch live index.html and asset bundle
+        run: |
+          set -e
+          BASE="https://paulesthor.github.io/mathilde-v2"
+          echo "--- index.html ---"
+          curl -sS "$BASE/" -o index.html
+          cat index.html
+          CSS_PATH=$(grep -oE '/mathilde-v2/assets/index-[A-Za-z0-9_-]+\.css' index.html | head -1)
+          JS_PATH=$(grep -oE '/mathilde-v2/assets/index-[A-Za-z0-9_-]+\.js' index.html | head -1)
+          echo "CSS_PATH=$CSS_PATH"
+          echo "JS_PATH=$JS_PATH"
+
+          echo "--- CSS: hero-carousel-dot rule ---"
+          curl -sS "https://paulesthor.github.io$CSS_PATH" -o bundle.css
+          grep -o '\.hero-carousel-dot{[^}]*}' bundle.css || echo "NOT FOUND: .hero-carousel-dot rule"
+          echo "--- CSS: hero-carousel-img-container rule (aspect-ratio) ---"
+          grep -o '\.hero-carousel-img-container{[^}]*}' bundle.css || echo "NOT FOUND"
+          echo "--- CSS: hero-inner rule (grid-template-columns) ---"
+          grep -o '\.hero-inner{[^}]*}' bundle.css || echo "NOT FOUND"
+
+          echo "--- JS: build SHA baked in ---"
+          curl -sS "https://paulesthor.github.io$JS_PATH" -o bundle.js
+          grep -o 'VERSION\\?\s*[A-Za-z0-9]\{7\}' bundle.js | head -3 || true
+          grep -oE '"[0-9a-f]{7}"' bundle.js | sort -u | head -5 || true
+
+          echo "--- Response headers for index.html (cache-control) ---"
+          curl -sS -D - -o /dev/null "$BASE/"
