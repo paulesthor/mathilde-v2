@@ -33,10 +33,8 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                 </div>
 
                 {/* Navigation Links */}
-                <div className="flex h-[calc(100vh-6rem)] flex-col items-center justify-between p-6 text-center lg:items-start lg:text-left lg:pl-32 pb-16 pt-8">
-                    <div /> {/* Top spacer to center navigation */}
-                    
-                    <nav className="flex flex-col space-y-6 md:space-y-8">
+                <div className="flex h-[calc(100vh-6rem)] flex-col items-center justify-center overflow-y-auto p-6 text-center lg:items-start lg:text-left lg:pl-32">
+                    <nav className="flex flex-col space-y-6 py-8 md:space-y-8">
                         {navLinks.map((link, idx) => (
                             <Link
                                 key={link.name}
@@ -55,8 +53,6 @@ export default function FullScreenMenu({ isOpen, onClose }) {
                             </Link>
                         ))}
                     </nav>
-
-                    <div /> {/* Bottom placeholder */}
                 </div>
             </div>
         </div>

@@ -126,7 +126,7 @@ export default function AdminLayout({ children, activeTab, title }) {
                                 <Icon size={22} strokeWidth={isActive ? 2 : 1.5} />
                                 <Badge count={count} />
                             </span>
-                            <span className={`font-mono text-[9px] uppercase tracking-wider leading-none ${isActive ? 'font-bold' : ''}`}>
+                            <span className={`w-full truncate px-0.5 text-center font-mono text-[8px] uppercase tracking-wide leading-none ${isActive ? 'font-bold' : ''}`}>
                                 {label}
                             </span>
                         </Link>
