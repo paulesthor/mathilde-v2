@@ -5,6 +5,14 @@ import { usePushSubscription } from '../hooks/usePushSubscription';
 import { useToast } from '../contexts/ToastContext';
 import AdminLayout from '../components/Layout/AdminLayout';
 
+const BUILD_SHA = import.meta.env.VITE_BUILD_SHA || 'dev';
+const BUILD_TIME = import.meta.env.VITE_BUILD_TIME
+    ? new Date(import.meta.env.VITE_BUILD_TIME).toLocaleString('fr-FR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+    })
+    : null;
+
 const NOTIF_TYPES = [
     { key: 'notify_orders',   label: 'Nouvelles commandes',   description: 'Un client vient de payer une pièce.', icon: ShoppingBag },
     { key: 'notify_contacts', label: 'Demandes de devis',     description: 'Un visiteur a rempli le formulaire de contact.', icon: MessageSquare },
@@ -121,6 +129,12 @@ export default function AdminSettings() {
                     ))}
                 </div>
             )}
+
+            <div className="mt-16 pt-6 border-t border-border/40 max-w-xl">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                    Version {BUILD_SHA}{BUILD_TIME ? ` — déployée le ${BUILD_TIME}` : ''}
+                </p>
+            </div>
         </AdminLayout>
     );
 }
