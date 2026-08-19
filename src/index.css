@@ -254,13 +254,11 @@
   position: relative;
   width: 100%;
   max-width: 100%;
-  /* Légère rotation organique, plus discrète en format paysage */
-  transform: rotate(0.6deg);
   transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .hero-carousel-wrapper:hover {
-  transform: rotate(0deg) scale(1.008);
+  transform: scale(1.008);
 }
 
 .hero-carousel-img-container {
