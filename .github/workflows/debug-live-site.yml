@@ -7,30 +7,78 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch live index.html and asset bundle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
         run: |
-          set -e
-          BASE="https://paulesthor.github.io/mathilde-v2"
-          echo "--- index.html ---"
-          curl -sS "$BASE/" -o index.html
-          cat index.html
-          CSS_PATH=$(grep -oE '/mathilde-v2/assets/index-[A-Za-z0-9_-]+\.css' index.html | head -1)
-          JS_PATH=$(grep -oE '/mathilde-v2/assets/index-[A-Za-z0-9_-]+\.js' index.html | head -1)
-          echo "CSS_PATH=$CSS_PATH"
-          echo "JS_PATH=$JS_PATH"
+          npm init -y > /dev/null 2>&1
+          npm install --no-save playwright > /dev/null 2>&1
+          npx playwright install --with-deps chromium
 
-          echo "--- CSS: hero-carousel-dot rule ---"
-          curl -sS "https://paulesthor.github.io$CSS_PATH" -o bundle.css
-          grep -o '\.hero-carousel-dot{[^}]*}' bundle.css || echo "NOT FOUND: .hero-carousel-dot rule"
-          echo "--- CSS: hero-carousel-img-container rule (aspect-ratio) ---"
-          grep -o '\.hero-carousel-img-container{[^}]*}' bundle.css || echo "NOT FOUND"
-          echo "--- CSS: hero-inner rule (grid-template-columns) ---"
-          grep -o '\.hero-inner{[^}]*}' bundle.css || echo "NOT FOUND"
+      - name: Screenshot + probe the live carousel dots
+        run: |
+          cat > probe.mjs << 'EOF'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch();
+          const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, bypassCSP: true });
+          const page = await context.newPage();
+          // Cache-bust so this is genuinely a fresh load, not a cached copy.
+          await page.goto('https://paulesthor.github.io/mathilde-v2/?cb=' + Date.now(), { waitUntil: 'networkidle' });
+          await page.waitForTimeout(800);
 
-          echo "--- JS: build SHA baked in ---"
-          curl -sS "https://paulesthor.github.io$JS_PATH" -o bundle.js
-          grep -o 'VERSION\\?\s*[A-Za-z0-9]\{7\}' bundle.js | head -3 || true
-          grep -oE '"[0-9a-f]{7}"' bundle.js | sort -u | head -5 || true
+          const dotsEl = await page.locator('.hero-carousel-dots').first();
+          await dotsEl.scrollIntoViewIfNeeded();
+          await page.waitForTimeout(300);
+          await dotsEl.screenshot({ path: 'dots-zoom.png' });
+          await page.screenshot({ path: 'hero-full.png' });
 
-          echo "--- Response headers for index.html (cache-control) ---"
-          curl -sS -D - -o /dev/null "$BASE/"
+          const dot0 = page.locator('.hero-carousel-dot').nth(0);
+          const cs = await dot0.evaluate((el) => {
+            const s = getComputedStyle(el);
+            return { width: s.width, height: s.height, padding: s.padding, backgroundClip: s.backgroundClip, borderRadius: s.borderRadius };
+          });
+          console.log('computed style of dot 0:', JSON.stringify(cs));
+
+          // Click dot index 2, check it takes effect and stays (not overridden shortly after).
+          const dots = page.locator('.hero-carousel-dot');
+          const count = await dots.count();
+          console.log('dot count:', count);
+          if (count >= 3) {
+            await dots.nth(2).click();
+            await page.waitForTimeout(700);
+            let active = await page.evaluate(() => Array.from(document.querySelectorAll('.hero-carousel-dot')).findIndex(d => d.classList.contains('active')));
+            console.log('active right after click (expect 2):', active);
+
+            // Rapid double-click test — does it get stuck / not respond?
+            await dots.nth(0).click();
+            await page.waitForTimeout(50);
+            await dots.nth(0).click();
+            await page.waitForTimeout(700);
+            active = await page.evaluate(() => Array.from(document.querySelectorAll('.hero-carousel-dot')).findIndex(d => d.classList.contains('active')));
+            console.log('active after rapid double-click on dot 0 (expect 0):', active);
+
+            await page.waitForTimeout(1000);
+            await dots.nth(1).click();
+            await page.waitForTimeout(700);
+            active = await page.evaluate(() => Array.from(document.querySelectorAll('.hero-carousel-dot')).findIndex(d => d.classList.contains('active')));
+            console.log('active after clicking dot 1 (expect 1, checks click still works after prior clicks):', active);
+          }
+
+          const pageErrors = [];
+          page.on('pageerror', (e) => pageErrors.push(String(e)));
+          await page.waitForTimeout(300);
+          console.log('page errors:', JSON.stringify(pageErrors));
+
+          await browser.close();
+          EOF
+          node probe.mjs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dots-screenshots
+          path: |
+            dots-zoom.png
+            hero-full.png
+          retention-days: 3
