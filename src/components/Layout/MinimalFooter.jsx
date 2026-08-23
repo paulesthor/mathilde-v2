@@ -30,13 +30,13 @@ export default function MinimalFooter() {
                     <a href="mailto:bonjour@gest-tapisserie.com" className="text-foreground hover:text-primary transition-colors">bonjour@gest-tapisserie.com</a>
                     <a href="tel:+33617473099" className="text-foreground hover:text-primary transition-colors">06 17 47 30 99</a>
                     <a
-                        href="https://instagram.com/gesta_studio"
+                        href="https://instagram.com/gesta_tapiesserie"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 text-foreground hover:text-primary transition-colors lg:justify-end"
                     >
                         <Instagram className="h-4 w-4" />
-                        @gesta_studio
+                        @gesta_tapiesserie
                     </a>
                 </div>
             </div>

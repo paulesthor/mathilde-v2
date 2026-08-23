@@ -163,13 +163,13 @@ export default function Home() {
                                     Paris — Uniquement sur RDV
                                 </span>
                                 <a
-                                    href="https://instagram.com/gesta_studio"
+                                    href="https://instagram.com/gesta_tapiesserie"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="hero-contact-insta"
                                 >
                                     <Instagram className="hero-contact-icon" />
-                                    @gesta_studio
+                                    @gesta_tapiesserie
                                 </a>
                             </div>
                         </div>
