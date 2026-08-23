@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Instagram } from 'lucide-react';
 
 export default function MinimalFooter() {
     return (
@@ -25,9 +26,18 @@ export default function MinimalFooter() {
                 </div>
 
                 <div className="flex flex-col space-y-2 font-mono text-sm text-muted-foreground text-right lg:items-end">
-                    <p>123 Rue de l'Atelier, 75000 Paris</p>
-                    <a href="mailto:contact@gesta-studio.com" className="text-foreground hover:text-primary transition-colors">contact@gesta-studio.com</a>
-                    <a href="tel:+33600000000" className="text-foreground hover:text-primary transition-colors">06 00 00 00 00</a>
+                    <p>7 Av. de Blida, 57000 Metz</p>
+                    <a href="mailto:bonjour@gest-tapisserie.com" className="text-foreground hover:text-primary transition-colors">bonjour@gest-tapisserie.com</a>
+                    <a href="tel:+33617473099" className="text-foreground hover:text-primary transition-colors">06 17 47 30 99</a>
+                    <a
+                        href="https://instagram.com/gesta_studio"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-foreground hover:text-primary transition-colors lg:justify-end"
+                    >
+                        <Instagram className="h-4 w-4" />
+                        @gesta_studio
+                    </a>
                 </div>
             </div>
         </footer>

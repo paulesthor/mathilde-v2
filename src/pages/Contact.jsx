@@ -64,8 +64,8 @@ export default function Contact() {
                 <div className="mt-24 space-y-8 font-mono text-sm tracking-widest uppercase">
                     <div>
                         <p className="text-muted-foreground mb-1">Email</p>
-                        <a href="mailto:contact@gesta-studio.com" className="text-foreground hover:text-primary transition-colors" onClick={(e) => isEditMode && e.preventDefault()}>
-                            <EditableText page="contact" section="contact_email" fallback="contact@gesta-studio.com" as="span" multiline={false} />
+                        <a href="mailto:bonjour@gest-tapisserie.com" className="text-foreground hover:text-primary transition-colors" onClick={(e) => isEditMode && e.preventDefault()}>
+                            <EditableText page="contact" section="contact_email" fallback="bonjour@gest-tapisserie.com" as="span" multiline={false} />
                         </a>
                     </div>
                     <div>

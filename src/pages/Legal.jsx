@@ -78,7 +78,7 @@ export default function Legal() {
                                 <p>
                                     Le site <strong>Gesta Studio</strong> est édité par Mathilde Gesta, entrepreneur individuel.
                                     <br />
-                                    <strong>Siège social :</strong> 123 Rue de l'Atelier, 75000 Paris
+                                    <strong>Siège social :</strong> 7 Av. de Blida, 57000 Metz
                                     <br />
                                     <strong>SIRET :</strong> 987 654 321 00012
                                     <br />
@@ -86,7 +86,7 @@ export default function Legal() {
                                     <br />
                                     <strong>Directrice de la publication :</strong> Mathilde Gesta
                                     <br />
-                                    <strong>Contact :</strong> <a href="mailto:contact@gesta-studio.com" className="underline hover:text-primary transition-colors">contact@gesta-studio.com</a> | 06 00 00 00 00
+                                    <strong>Contact :</strong> <a href="mailto:bonjour@gest-tapisserie.com" className="underline hover:text-primary transition-colors">bonjour@gest-tapisserie.com</a> | 06 17 47 30 99
                                 </p>
                             </div>
 
@@ -147,7 +147,7 @@ export default function Legal() {
                             <div>
                                 <h2 className="font-editorial text-3xl text-foreground mb-4">4. Retrait et Expédition</h2>
                                 <p>
-                                    Par défaut, les pièces achetées en ligne sont à retirer directement à l'atelier (123 Rue de l'Atelier, Paris) par l'acheteur ou son transporteur. 
+                                    Par défaut, les pièces achetées en ligne sont à retirer directement à l'atelier (7 Av. de Blida, 57000 Metz) par l'acheteur ou son transporteur.
                                     <br />
                                     Si vous souhaitez une livraison à domicile, veuillez nous contacter au préalable ou immédiatement après votre achat afin d'établir un devis personnalisé de transport.
                                 </p>
@@ -185,7 +185,7 @@ export default function Legal() {
                                     - Le traitement de votre commande et l'établissement des factures.
                                     - La gestion de vos avis clients (soumis sur notre page d'accueil sous réserve de modération et approbation).
                                     <br />
-                                    Ces données ne sont jamais vendues, louées ou transmises à des tiers à des fins publicitaires. Vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles sur simple demande par e-mail à <a href="mailto:contact@gesta-studio.com" className="underline hover:text-primary transition-colors">contact@gesta-studio.com</a>.
+                                    Ces données ne sont jamais vendues, louées ou transmises à des tiers à des fins publicitaires. Vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles sur simple demande par e-mail à <a href="mailto:bonjour@gest-tapisserie.com" className="underline hover:text-primary transition-colors">bonjour@gest-tapisserie.com</a>.
                                 </p>
                             </div>
 
