@@ -12,9 +12,12 @@ jobs:
     steps:
       - name: Récupérer la page en ligne et extraire l'instantané
         run: |
-          curl -s "https://paulesthor.github.io/mathilde-v2/?cachebust=$(date +%s)" -o page.html
-          echo "--- Script tag brut ---"
-          grep -o '<script id="__SITE_CONTENT__"[^>]*>.*</script>' page.html | head -c 4000
-          echo ""
-          echo "--- Longueur totale du contenu JSON ---"
-          grep -o '<script id="__SITE_CONTENT__"[^>]*>.*</script>' page.html | wc -c
+          curl -sL "https://paulesthor.github.io/mathilde-v2/?cachebust=$(date +%s)" -o page.html
+          echo "--- Taille du fichier récupéré ---"
+          wc -c page.html
+          echo "--- Contient __SITE_CONTENT__ ? ---"
+          grep -c "__SITE_CONTENT__" page.html || echo "0 (absent)"
+          echo "--- Contexte autour de __SITE_CONTENT__ (si présent) ---"
+          grep -o '.\{0,80\}__SITE_CONTENT__.\{0,4000\}' page.html || echo "(rien trouvé)"
+          echo "--- Premières lignes du head ---"
+          head -c 1500 page.html
