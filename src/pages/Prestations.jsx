@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { fetchSiteContent, getItems } from '../lib/siteContent';
+import { fetchSiteContent, getItems, getCachedSiteContent } from '../lib/siteContent';
 import { supabase } from '../utils/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
 import EditableText from '../components/Editable/EditableText';
@@ -45,24 +45,33 @@ const DEFAULT_PRESTATIONS = [
     }
 ];
 
+function mapPrestationRow(row, idx) {
+    return {
+        id: row.id,
+        number: String(idx + 1).padStart(2, '0'),
+        title: row.title,
+        description: row.text_value,
+        details: row.extra?.details || [],
+        sortOrder: row.sort_order,
+    };
+}
+
 export default function Prestations() {
     const { showToast } = useToast();
     const [hoveredId, setHoveredId] = useState(null);
-    const [prestationsData, setPrestationsData] = useState(DEFAULT_PRESTATIONS);
+    // Démarre avec le dernier contenu connu (cache local) plutôt que le
+    // contenu par défaut, pour éviter le flash au chargement de la page.
+    const [prestationsData, setPrestationsData] = useState(() => {
+        const rows = getItems(getCachedSiteContent('prestations'), 'item', null);
+        return rows ? rows.map(mapPrestationRow) : DEFAULT_PRESTATIONS;
+    });
 
     useEffect(() => {
         const loadContent = async () => {
             const { itemsBySection } = await fetchSiteContent('prestations');
             const rows = getItems(itemsBySection, 'item', null);
             if (!rows) return;
-            setPrestationsData(rows.map((row, idx) => ({
-                id: row.id,
-                number: String(idx + 1).padStart(2, '0'),
-                title: row.title,
-                description: row.text_value,
-                details: row.extra?.details || [],
-                sortOrder: row.sort_order,
-            })));
+            setPrestationsData(rows.map(mapPrestationRow));
         };
         loadContent();
     }, []);

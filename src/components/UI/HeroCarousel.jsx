@@ -4,7 +4,7 @@ import piece1 from '../../assets/piece_1.webp';
 import piece2 from '../../assets/piece_2.webp';
 import piece3 from '../../assets/piece_3.webp';
 import portraitMathilde from '../../assets/portrait_mathilde.webp';
-import { fetchSiteContent, getItems } from '../../lib/siteContent';
+import { fetchSiteContent, getItems, getCachedSiteContent } from '../../lib/siteContent';
 import { supabase } from '../../utils/supabaseClient';
 import { useToast } from '../../contexts/ToastContext';
 import { useEditMode } from '../../contexts/EditModeContext';
@@ -28,7 +28,10 @@ export default function HeroCarousel() {
   const { isAdmin, isEditMode } = useEditMode();
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [rows, setRows] = useState(DEFAULT_ROWS);
+  // Démarre avec le dernier contenu connu (cache local) plutôt que les
+  // photos par défaut, pour éviter le flash "anciennes photos -> vraies
+  // photos" au chargement / rafraîchissement de la page.
+  const [rows, setRows] = useState(() => getItems(getCachedSiteContent('home'), 'hero_carousel', null) || DEFAULT_ROWS);
   const timerRef = useRef(null);
   const fileInputRef = useRef(null);
 

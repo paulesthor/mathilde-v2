@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import MinimalModal from '../components/UI/MinimalModal';
-import { fetchSiteContent, getItems } from '../lib/siteContent';
+import { fetchSiteContent, getItems, getCachedSiteContent } from '../lib/siteContent';
 import { supabase } from '../utils/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
 import { useEditMode } from '../contexts/EditModeContext';
@@ -37,25 +37,35 @@ const DEFAULT_CREATIONS = [
     }
 ];
 
+function mapCreationRow(row) {
+    return {
+        id: row.id,
+        title: row.title,
+        image: row.image_url,
+        description: row.text_value,
+        details: row.extra?.details || [],
+        sortOrder: row.sort_order,
+    };
+}
+
 export default function Creations() {
     const { showToast } = useToast();
     const { isEditMode } = useEditMode();
     const [selectedItem, setSelectedItem] = useState(null);
-    const [creationsData, setCreationsData] = useState(DEFAULT_CREATIONS);
+    // Démarre avec le dernier contenu connu (cache local) plutôt que les
+    // photos par défaut, pour éviter le flash "anciennes photos -> vraies
+    // photos" au chargement / rafraîchissement de la page.
+    const [creationsData, setCreationsData] = useState(() => {
+        const rows = getItems(getCachedSiteContent('creations'), 'item', null);
+        return rows ? rows.map(mapCreationRow) : DEFAULT_CREATIONS;
+    });
 
     useEffect(() => {
         const loadContent = async () => {
             const { itemsBySection } = await fetchSiteContent('creations');
             const rows = getItems(itemsBySection, 'item', null);
             if (!rows) return;
-            setCreationsData(rows.map((row) => ({
-                id: row.id,
-                title: row.title,
-                image: row.image_url,
-                description: row.text_value,
-                details: row.extra?.details || [],
-                sortOrder: row.sort_order,
-            })));
+            setCreationsData(rows.map(mapCreationRow));
         };
         loadContent();
     }, []);

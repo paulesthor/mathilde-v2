@@ -4,7 +4,7 @@ import MinimalModal from '../components/UI/MinimalModal';
 import piece1 from '../assets/piece_1.webp';
 import piece2 from '../assets/piece_2.webp';
 import piece3 from '../assets/piece_3.webp';
-import { fetchSiteContent, getItems } from '../lib/siteContent';
+import { fetchSiteContent, getItems, getCachedSiteContent } from '../lib/siteContent';
 import { supabase } from '../utils/supabaseClient';
 import { useToast } from '../contexts/ToastContext';
 import { useEditMode } from '../contexts/EditModeContext';
@@ -53,25 +53,35 @@ const DEFAULT_REALISATIONS = [
     },
 ];
 
+function mapRealisationRow(row, idx) {
+    return {
+        id: row.id,
+        title: row.title,
+        image: row.image_url || FALLBACK_LOCAL_IMAGES[idx] || FALLBACK_LOCAL_IMAGES[0],
+        imageUrl: row.image_url,
+        description: row.text_value,
+        details: row.extra?.details || [],
+        sortOrder: row.sort_order,
+    };
+}
+
 export default function Realisations() {
     const { showToast } = useToast();
     const { isEditMode } = useEditMode();
     const [selectedItem, setSelectedItem] = useState(null);
-    const [realisationsData, setRealisationsData] = useState(DEFAULT_REALISATIONS);
+    // Démarre avec le dernier contenu connu (cache local) plutôt que les
+    // photos par défaut, pour éviter le flash "anciennes photos -> vraies
+    // photos" au chargement / rafraîchissement de la page.
+    const [realisationsData, setRealisationsData] = useState(() => {
+        const rows = getItems(getCachedSiteContent('realisations'), 'item', null);
+        return rows ? rows.map(mapRealisationRow) : DEFAULT_REALISATIONS;
+    });
 
     const loadContent = async () => {
         const { itemsBySection } = await fetchSiteContent('realisations');
         const rows = getItems(itemsBySection, 'item', null);
         if (!rows) return;
-        setRealisationsData(rows.map((row, idx) => ({
-            id: row.id,
-            title: row.title,
-            image: row.image_url || FALLBACK_LOCAL_IMAGES[idx] || FALLBACK_LOCAL_IMAGES[0],
-            imageUrl: row.image_url,
-            description: row.text_value,
-            details: row.extra?.details || [],
-            sortOrder: row.sort_order,
-        })));
+        setRealisationsData(rows.map(mapRealisationRow));
     };
 
     useEffect(() => { loadContent(); }, []);
