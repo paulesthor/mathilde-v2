@@ -12,12 +12,10 @@ jobs:
     steps:
       - name: Récupérer la page en ligne et extraire l'instantané
         run: |
-          curl -sL "https://paulesthor.github.io/mathilde-v2/?cachebust=$(date +%s)" -o page.html
+          curl -sL --max-time 20 "https://paulesthor.github.io/mathilde-v2/?cachebust=$(date +%s)" -o page.html
           echo "--- Taille du fichier récupéré ---"
           wc -c page.html
           echo "--- Contient __SITE_CONTENT__ ? ---"
-          grep -c "__SITE_CONTENT__" page.html || echo "0 (absent)"
-          echo "--- Contexte autour de __SITE_CONTENT__ (si présent) ---"
-          grep -o '.\{0,80\}__SITE_CONTENT__.\{0,4000\}' page.html || echo "(rien trouvé)"
-          echo "--- Premières lignes du head ---"
-          head -c 1500 page.html
+          grep -c "__SITE_CONTENT__" page.html || true
+          echo "--- Premiers 3000 octets (la balise, si injectée, est tout en haut du head) ---"
+          head -c 3000 page.html
