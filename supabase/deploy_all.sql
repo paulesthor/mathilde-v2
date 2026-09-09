@@ -219,3 +219,27 @@ CREATE POLICY "Public read available products, admin reads all"
   ON public.products
   FOR SELECT
   USING (status = 'available' OR auth.role() = 'authenticated');
+
+-- 10. Durcissement RLS "reviews" (20260909_products_reviews_rls_hardening.sql)
+-- Faille CRITIQUE : la policy d'INSERT anonyme créée à la main permettait à
+-- n'importe qui de poster un faux avis directement en statut "approved",
+-- visible immédiatement sur le site, sans authentification ni modération.
+-- submit-review (Edge Function) utilise la clé service, qui contourne RLS —
+-- aucune policy anonyme n'était donc nécessaire.
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE pol RECORD;
+BEGIN
+  FOR pol IN
+    SELECT policyname FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'reviews' AND cmd = 'INSERT'
+  LOOP
+    EXECUTE format('DROP POLICY %I ON public.reviews', pol.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY "Admin insert reviews"
+  ON public.reviews
+  FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
