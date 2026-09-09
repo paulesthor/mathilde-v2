@@ -33,7 +33,9 @@ jobs:
         run: |
           curl -sS -w "\nHTTP_STATUS:%{http_code}\n" --max-time 15 \
             "$SUPA_URL/functions/v1/debug-check-admin-emails" \
+            -H "apikey: $ANON_KEY" \
             -H "Authorization: Bearer $DEBUG_TOKEN"
         env:
           SUPA_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           DEBUG_TOKEN: ${{ inputs.debug_token }}
