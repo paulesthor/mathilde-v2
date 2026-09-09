@@ -3,10 +3,10 @@ name: Debug — Applique les correctifs sécurité (usage unique)
 # Workflow temporaire : applique en une fois les correctifs identifiés par
 # l'audit sécurité du 2026-09-09, via l'API Management de Supabase.
 # 1. Liste les comptes admin existants (pour ADMIN_EMAILS, sans en oublier).
-# 2. Désactive l'inscription publique (la faille racine de l'audit).
-# 3. Exécute la migration SQL (policy de lecture "products" durcie).
-# 4. Configure le secret ADMIN_EMAILS pour les Edge Functions.
-# 5. Redéploie les 3 fonctions modifiées (send-push, create-stripe-link,
+# (L'inscription publique a déjà été désactivée manuellement par la cliente.)
+# 2. Exécute la migration SQL (policy de lecture "products" durcie).
+# 3. Configure le secret ADMIN_EMAILS pour les Edge Functions.
+# 4. Redéploie les 3 fonctions modifiées (send-push, create-stripe-link,
 #    update-product).
 on:
   workflow_dispatch:
@@ -41,23 +41,7 @@ jobs:
           echo "Comptes trouvés : $EMAILS"
           echo "emails=$EMAILS" >> "$GITHUB_OUTPUT"
 
-      - name: 2. Désactive l'inscription publique (config Auth)
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ inputs.supabase_access_token }}
-        run: |
-          RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X PATCH \
-            "https://api.supabase.com/v1/projects/dekmujrzeverlmnzjzbh/config/auth" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{"disable_signup": true}')
-          echo "$RESPONSE"
-          STATUS=$(echo "$RESPONSE" | grep -o 'HTTP_STATUS:[0-9]*' | cut -d: -f2)
-          if [ "$STATUS" -ge 300 ]; then
-            echo "::error::Échec de la désactivation de l'inscription (HTTP $STATUS)"
-            exit 1
-          fi
-
-      - name: 3. Exécute la migration SQL (durcissement RLS products)
+      - name: 2. Exécute la migration SQL (durcissement RLS products)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ inputs.supabase_access_token }}
         run: |
@@ -78,13 +62,13 @@ jobs:
         with:
           version: latest
 
-      - name: 4. Configure ADMIN_EMAILS pour les Edge Functions
+      - name: 3. Configure ADMIN_EMAILS pour les Edge Functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ inputs.supabase_access_token }}
         run: |
           supabase secrets set ADMIN_EMAILS="${{ steps.list_users.outputs.emails }}" --project-ref dekmujrzeverlmnzjzbh
 
-      - name: 5. Redéploie les fonctions modifiées
+      - name: 4. Redéploie les fonctions modifiées
         env:
           SUPABASE_ACCESS_TOKEN: ${{ inputs.supabase_access_token }}
         run: |
