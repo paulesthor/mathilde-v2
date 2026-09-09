@@ -1,0 +1,22 @@
+name: Debug — Redeploie send-contact-email et stripe-webhook
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy stripe-webhook (sans verification JWT)
+        run: supabase functions deploy stripe-webhook --project-ref dekmujrzeverlmnzjzbh --no-verify-jwt
+
+      - name: Deploy send-contact-email
+        run: supabase functions deploy send-contact-email --project-ref dekmujrzeverlmnzjzbh
