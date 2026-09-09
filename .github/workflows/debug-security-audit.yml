@@ -1,0 +1,70 @@
+name: Debug — Audit sécurité (connexion / admin / paiement)
+
+# Test d'intrusion ponctuel en boîte noire, clé anonyme publique uniquement
+# (aucun token admin nécessaire) :
+# 1. L'inscription publique est-elle activée sur Supabase Auth ? (déterminant
+#    pour savoir si "authentifié" == "admin" dans les Edge Functions)
+# 2. Un compte auto-inscrit peut-il passer le contrôle d'auth de update-product ?
+# 3. La table products expose-t-elle tous les statuts en lecture anonyme ?
+# 4. Un anonyme peut-il modifier le statut d'un avis (modération) ?
+# 5. send-push est-il déclenchable avec la seule clé anonyme publique ?
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      SUPA_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - name: 1. Auto-inscription publique (auth/v1/signup)
+        run: |
+          echo "--- Tentative d'inscription avec un email jetable ---"
+          EMAIL="pentest-$(date +%s)@example.com"
+          RESP=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$SUPA_URL/auth/v1/signup" \
+            -H "apikey: $ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"Pentest1234!\"}")
+          echo "$RESP"
+          echo "$RESP" > /tmp/signup_resp.txt
+
+      - name: 2. Si un token a été obtenu, teste update-product avec
+        run: |
+          TOKEN=$(grep -o '"access_token":"[^"]*"' /tmp/signup_resp.txt | head -1 | cut -d'"' -f4)
+          if [ -z "$TOKEN" ]; then
+            echo "Pas de access_token immédiat (confirmation email probablement requise, ou inscription refusée) — test sauté."
+          else
+            echo "--- access_token obtenu, test de l'autorisation sur update-product ---"
+            curl -s -w "\nHTTP_STATUS:%{http_code}\n" -X POST "$SUPA_URL/functions/v1/update-product" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "apikey: $ANON_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"product_id":"00000000-0000-0000-0000-000000000000","status":"archived"}'
+          fi
+
+      - name: 3. Lecture anonyme de la table products (tous statuts confondus)
+        run: |
+          echo "--- SELECT anonyme sans filtre de statut ---"
+          curl -s -w "\nHTTP_STATUS:%{http_code}\n" "$SUPA_URL/rest/v1/products?select=id,title,status,price" \
+            -H "apikey: $ANON_KEY" \
+            -H "Authorization: Bearer $ANON_KEY"
+
+      - name: 4. Tentative de modération anonyme d'un avis (UPDATE reviews.status)
+        run: |
+          echo "--- UPDATE anonyme sur reviews (doit être bloqué par RLS) ---"
+          curl -s -w "\nHTTP_STATUS:%{http_code}\n" -X PATCH "$SUPA_URL/rest/v1/reviews?id=eq.00000000-0000-0000-0000-000000000000" \
+            -H "apikey: $ANON_KEY" \
+            -H "Authorization: Bearer $ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"status":"approved"}'
+
+      - name: 5. Déclenchement de send-push avec la seule clé anonyme
+        run: |
+          echo "--- Appel de send-push (doit normalement nécessiter la clé service, pas juste anon) ---"
+          curl -s -w "\nHTTP_STATUS:%{http_code}\n" -X POST "$SUPA_URL/functions/v1/send-push" \
+            -H "apikey: $ANON_KEY" \
+            -H "Authorization: Bearer $ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"title":"Test audit sécurité","body":"Ceci est un test d une notification déclenchée avec la seule clé publique.","type":"order"}'
