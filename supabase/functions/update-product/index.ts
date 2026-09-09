@@ -52,10 +52,10 @@ serve(async (req) => {
 
     // Un token valide prouve seulement "connecté", pas "admin" : si l'inscription
     // publique venait à être (ré)activée par erreur côté Supabase, n'importe quel
-    // compte authentifié passerait sinon ce contrôle. ADMIN_EMAIL restreint l'accès
-    // au seul compte de la cliente.
-    const adminEmail = Deno.env.get('ADMIN_EMAIL')
-    if (adminEmail && user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
+    // compte authentifié passerait sinon ce contrôle. ADMIN_EMAILS (liste séparée
+    // par des virgules) restreint l'accès aux seuls comptes autorisés.
+    const adminEmails = (Deno.env.get('ADMIN_EMAILS') ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+    if (adminEmails.length > 0 && !adminEmails.includes(user.email?.toLowerCase() ?? '')) {
       return new Response(
         JSON.stringify({ error: 'Accès refusé.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
