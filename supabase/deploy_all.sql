@@ -40,6 +40,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- SECURITY DEFINER contourne RLS par conception : Postgres accorde EXECUTE à
+-- PUBLIC par défaut, donc sans ce REVOKE, n'importe qui avec la seule clé
+-- anonyme peut appeler cette RPC directement et décrémenter/vendre un produit
+-- sans passer par le webhook Stripe. Seul stripe-webhook (service_role) l'appelle.
+REVOKE EXECUTE ON FUNCTION decrement_product_quantity(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION decrement_product_quantity(TEXT) TO service_role;
+
 -- 3. Demandes de contact / devis (20260629_contact_requests.sql)
 CREATE TABLE IF NOT EXISTS contact_requests (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -243,3 +250,11 @@ CREATE POLICY "Admin insert reviews"
   ON public.reviews
   FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
+
+-- 11. Verrouillage RPC "decrement_product_quantity" (20260909_lock_down_decrement_rpc.sql)
+-- Faille CRITIQUE confirmée par test : la RPC était appelable directement avec
+-- la seule clé anonyme et modifiait réellement le stock (quantity -> 0,
+-- status -> 'sold'), permettant à quiconque de rendre indisponible n'importe
+-- quel produit sans payer, en contournant totalement Stripe.
+REVOKE EXECUTE ON FUNCTION decrement_product_quantity(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION decrement_product_quantity(TEXT) TO service_role;
