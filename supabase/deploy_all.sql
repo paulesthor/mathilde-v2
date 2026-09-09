@@ -258,3 +258,47 @@ CREATE POLICY "Admin insert reviews"
 -- quel produit sans payer, en contournant totalement Stripe.
 REVOKE EXECUTE ON FUNCTION decrement_product_quantity(TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION decrement_product_quantity(TEXT) TO service_role;
+
+-- 12. Documentation de policies existantes créées via Supabase Studio
+-- (20260909_document_studio_policies.sql) — aucune n'est exploitable par un
+-- anonyme, mais elles n'étaient versionnées nulle part ; on les rend
+-- reproductibles sans changer leur comportement.
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+CREATE POLICY "Public Access"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Authenticated Insert" ON storage.objects;
+CREATE POLICY "Authenticated Insert"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Authenticated Update" ON storage.objects;
+CREATE POLICY "Authenticated Update"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'products')
+  WITH CHECK (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Authenticated Delete" ON storage.objects;
+CREATE POLICY "Authenticated Delete"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'products');
+
+DROP POLICY IF EXISTS "Allow authenticated manage products" ON public.products;
+CREATE POLICY "Allow authenticated manage products"
+  ON public.products
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow authenticated manage reviews" ON public.reviews;
+CREATE POLICY "Allow authenticated manage reviews"
+  ON public.reviews
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
