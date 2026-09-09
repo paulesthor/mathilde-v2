@@ -14,6 +14,19 @@ function getCorsHeaders(req: Request) {
   }
 }
 
+// Les champs du formulaire (nom, message...) sont écrits tels quels dans le
+// HTML de l'email — sans échappement, un visiteur pourrait injecter des
+// balises pour altérer la mise en forme ou glisser un lien trompeur dans
+// l'email reçu par la cliente ou par lui-même.
+function escapeHtml(value: string) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
@@ -65,12 +78,12 @@ serve(async (req) => {
           subject: `Nouvelle demande de devis — ${firstName} ${lastName}`,
           html: `<h2>Nouvelle demande de devis reçue</h2>
             <table style="font-family:monospace;font-size:14px">
-              <tr><td style="padding:8px 16px 8px 0;font-weight:bold">Nom</td><td>${firstName} ${lastName}</td></tr>
-              <tr><td style="padding:8px 16px 8px 0;font-weight:bold">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
-              <tr><td style="padding:8px 16px 8px 0;font-weight:bold">Téléphone</td><td>${phone || 'Non renseigné'}</td></tr>
+              <tr><td style="padding:8px 16px 8px 0;font-weight:bold">Nom</td><td>${escapeHtml(firstName)} ${escapeHtml(lastName)}</td></tr>
+              <tr><td style="padding:8px 16px 8px 0;font-weight:bold">Email</td><td><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td></tr>
+              <tr><td style="padding:8px 16px 8px 0;font-weight:bold">Téléphone</td><td>${phone ? escapeHtml(phone) : 'Non renseigné'}</td></tr>
             </table>
             <h3 style="margin-top:24px">Projet</h3>
-            <p style="font-size:15px;line-height:1.6;white-space:pre-wrap">${message}</p>
+            <p style="font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(message)}</p>
             <hr style="margin:32px 0;border:none;border-top:1px solid #eee"/>
             <p style="font-size:12px;color:#999">Demande reçue via le formulaire — Atelier Gesta</p>`,
         }),
@@ -87,9 +100,9 @@ serve(async (req) => {
           html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
             <h1 style="font-size:28px;font-weight:400;margin-bottom:8px">Atelier Gesta</h1>
             <p style="font-family:monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:32px">Tapisserie & Création sur-mesure</p>
-            <p style="font-size:16px;line-height:1.7">Bonjour ${firstName},</p>
+            <p style="font-size:16px;line-height:1.7">Bonjour ${escapeHtml(firstName)},</p>
             <p style="font-size:16px;line-height:1.7">Votre demande de devis a bien été reçue. Mathilde reviendra vers vous dans les <strong>48h ouvrées</strong>.</p>
-            <blockquote style="border-left:2px solid #d4c5b0;margin:24px 0;padding:12px 20px;color:#666;font-style:italic">"${message.substring(0, 120)}${message.length > 120 ? '…' : ''}"</blockquote>
+            <blockquote style="border-left:2px solid #d4c5b0;margin:24px 0;padding:12px 20px;color:#666;font-style:italic">"${escapeHtml(message.substring(0, 120))}${message.length > 120 ? '…' : ''}"</blockquote>
             <p style="font-size:14px;color:#888;margin-top:40px">À très bientôt,<br><strong>Mathilde — Atelier Gesta</strong></p>
             <hr style="margin:32px 0;border:none;border-top:1px solid #eee"/>
             <p style="font-size:11px;color:#bbb">Cet email confirme la réception de votre demande. Pour toute question : <a href="mailto:${notifyEmail}" style="color:#888">${notifyEmail}</a></p>

@@ -15,6 +15,19 @@ function getCorsHeaders(req: Request) {
   }
 }
 
+// Le nom saisi par le client lors du paiement Stripe est écrit tel quel dans
+// le HTML de l'email de confirmation — sans échappement, il pourrait
+// injecter des balises pour altérer la mise en forme ou glisser un lien
+// trompeur dans l'email qu'il reçoit lui-même.
+function escapeHtml(value: string) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
@@ -143,11 +156,11 @@ serve(async (req) => {
                   html: `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a">
                     <h1 style="font-size:28px;font-weight:400;margin-bottom:8px">Atelier Gesta</h1>
                     <p style="font-family:monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:32px">Tapisserie & Création sur-mesure</p>
-                    <p style="font-size:16px;line-height:1.7">Bonjour ${customerName},</p>
+                    <p style="font-size:16px;line-height:1.7">Bonjour ${escapeHtml(customerName)},</p>
                     <p style="font-size:16px;line-height:1.7">Votre commande a bien été confirmée. Merci pour votre confiance !</p>
                     <div style="background:#f9f7f4;border-left:2px solid #d4c5b0;padding:16px 20px;margin:24px 0">
                       <p style="margin:0;font-family:monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:#888">Commande</p>
-                      <p style="margin:8px 0 0;font-size:20px;font-weight:600">${productTitle}</p>
+                      <p style="margin:8px 0 0;font-size:20px;font-weight:600">${escapeHtml(productTitle)}</p>
                       <p style="margin:4px 0 0;font-size:16px;color:#666">${amountTotal.toFixed(2)} €</p>
                     </div>
                     <p style="font-size:15px;line-height:1.7;color:#555">Mathilde vous contactera prochainement pour convenir des modalités de livraison ou de retrait.</p>
