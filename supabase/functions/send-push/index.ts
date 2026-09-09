@@ -8,6 +8,18 @@ serve(async (req) => {
   }
 
   try {
+    // --- Appel interne uniquement ---
+    // Cette fonction n'est destinée qu'aux autres Edge Functions (webhook Stripe,
+    // formulaire de contact, avis...), qui l'appellent avec la clé service. Sans
+    // ce contrôle, n'importe qui connaissant la clé anonyme publique (visible
+    // dans le JS du site) pourrait déclencher une notification à son contenu
+    // arbitraire sur les appareils abonnés.
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const authHeader = req.headers.get('Authorization')
+    if (!serviceRoleKey || authHeader !== `Bearer ${serviceRoleKey}`) {
+      return new Response(JSON.stringify({ error: 'Accès refusé.' }), { status: 403 })
+    }
+
     const { title, body, type } = await req.json()
 
     const vapidPublic  = Deno.env.get('VAPID_PUBLIC_KEY')

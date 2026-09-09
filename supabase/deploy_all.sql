@@ -196,3 +196,26 @@ CREATE POLICY "Admin delete site-content bucket"
 -- Seed des listes existantes : voir supabase/migrations/20260727_site_content.sql
 -- (bloc DO idempotent non dupliqué ici pour garder ce script consolidé lisible ;
 -- si la table est vide après ce script, exécuter aussi ce fichier de migration).
+
+-- 9. Durcissement RLS "products" (20260909_products_reviews_rls_hardening.sql)
+-- La policy de lecture publique créée à la main dans Supabase Studio exposait
+-- tous les statuts (vendu, archivé, tests...) via un accès direct à l'API,
+-- en contournant le filtre appliqué seulement côté client sur "Pièces
+-- disponibles". Remplacée par une policy équivalente mais correctement scopée.
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+
+DO $$
+DECLARE pol RECORD;
+BEGIN
+  FOR pol IN
+    SELECT policyname FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'products' AND cmd = 'SELECT'
+  LOOP
+    EXECUTE format('DROP POLICY %I ON public.products', pol.policyname);
+  END LOOP;
+END $$;
+
+CREATE POLICY "Public read available products, admin reads all"
+  ON public.products
+  FOR SELECT
+  USING (status = 'available' OR auth.role() = 'authenticated');

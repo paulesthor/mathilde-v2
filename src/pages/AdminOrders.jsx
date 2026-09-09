@@ -3,7 +3,7 @@ import { supabase } from '../utils/supabaseClient';
 import { Database, Package, User, Mail, Phone, MapPin, Calendar, CreditCard, Search, Download, Receipt } from 'lucide-react';
 import AdminLayout from '../components/Layout/AdminLayout';
 
-const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true' && !import.meta.env.PROD;
 
 const DEFAULT_ORDERS = [
     {

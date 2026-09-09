@@ -5,7 +5,7 @@ import AdminLayout from '../components/Layout/AdminLayout';
 import { useToast } from '../contexts/ToastContext';
 import { prepareImageFile, uploadImageToBucket, removeImageFromBucket } from '../lib/imageUpload';
 
-const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true' && !import.meta.env.PROD;
 
 const DEFAULT_PRODUCTS = [
     { id: '1', title: "Chauffeuse 70s", price: 450, quantity: 1, description: "Chauffeuse des années 70 entièrement rhabillée avec un tissu bouclette très contemporain.", image_url: "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=1000", status: "available", stripe_payment_link: "#", created_at: new Date().toISOString() },

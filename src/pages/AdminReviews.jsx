@@ -4,7 +4,7 @@ import { Check, X, Trash, ArrowRight, MessageSquare, Star, Database } from 'luci
 import AdminLayout from '../components/Layout/AdminLayout';
 import { useToast } from '../contexts/ToastContext';
 
-const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true' && !import.meta.env.PROD;
 
 const MOCK_REVIEWS = [
     { id: '1', author_name: "Pauline R.", content: "Un travail remarquable sur mes bridges vintage. Le tissu est sublime et les finitions irréprochables. Une véritable artiste !", rating: 5, status: "approved", source: "local", created_at: new Date().toISOString() },

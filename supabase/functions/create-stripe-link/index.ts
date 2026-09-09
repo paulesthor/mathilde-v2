@@ -48,6 +48,18 @@ serve(async (req) => {
       )
     }
 
+    // Un token valide prouve seulement "connecté", pas "admin" : si l'inscription
+    // publique venait à être (ré)activée par erreur côté Supabase, n'importe quel
+    // compte authentifié passerait sinon ce contrôle. ADMIN_EMAIL restreint l'accès
+    // au seul compte de la cliente.
+    const adminEmail = Deno.env.get('ADMIN_EMAIL')
+    if (adminEmail && user.email?.toLowerCase() !== adminEmail.toLowerCase()) {
+      return new Response(
+        JSON.stringify({ error: 'Accès refusé.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // --- Stripe setup ---
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
     if (!stripeSecretKey) {

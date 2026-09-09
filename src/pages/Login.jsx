@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabaseClient';
 import { KeyRound, Mail, AlertCircle, Database } from 'lucide-react';
 
-const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const MOCK_ENABLED = import.meta.env.VITE_ENABLE_MOCK === 'true' && !import.meta.env.PROD;
 
 export default function Login() {
     const [email, setEmail] = useState('');
