@@ -1,0 +1,19 @@
+name: Debug - Lister les cles de config Auth (sans valeurs sensibles)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  read-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lister les cles de la config Auth
+        run: |
+          curl -sS --max-time 15 "https://api.supabase.com/v1/projects/dekmujrzeverlmnzjzbh/config/auth" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -o auth_config.json
+          echo "--- Toutes les cles (valeurs masquees) ---"
+          jq 'keys' auth_config.json
+          echo "--- Valeurs des cles liees au rate limit / sign-in ---"
+          jq 'to_entries | map(select(.key | test("rate|sign_in|sign_up"; "i"))) | from_entries' auth_config.json
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
