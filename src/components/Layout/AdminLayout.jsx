@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Package, ShoppingBag, Star, MessageSquare, Settings, LogOut, Bell, BellOff, Pencil } from 'lucide-react';
+import { Package, ShoppingBag, Star, MessageSquare, Settings, LogOut, Bell, BellOff, Pencil, BarChart3 } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 import { useAdminCounts } from '../../hooks/useAdminCounts';
 import { usePushSubscription } from '../../hooks/usePushSubscription';
@@ -20,6 +20,7 @@ const TABS = [
     { id: 'orders',   label: 'Commandes', icon: ShoppingBag,   path: '/admin/orders',   countKey: 'orders' },
     { id: 'reviews',  label: 'Avis',      icon: Star,          path: '/admin/reviews',  countKey: 'reviews' },
     { id: 'contacts', label: 'Demandes',  icon: MessageSquare, path: '/admin/contacts', countKey: 'contacts' },
+    { id: 'stats',    label: 'Stats',     icon: BarChart3,     path: '/admin/stats',    countKey: null },
     { id: 'content',  label: 'Modifier site', icon: Pencil,  path: '/',               countKey: null, isEditLink: true },
     { id: 'settings', label: 'Réglages',  icon: Settings,      path: '/admin/settings', countKey: null },
 ];
@@ -104,7 +105,7 @@ export default function AdminLayout({ children, activeTab, title }) {
 
             {/* Bottom tab bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border grid grid-cols-6"
+                className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t border-border grid grid-cols-7"
                 style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
             >
                 {TABS.map(({ id, label, icon: Icon, path, countKey, isEditLink }) => {

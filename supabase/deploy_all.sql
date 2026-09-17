@@ -302,3 +302,31 @@ CREATE POLICY "Allow authenticated manage reviews"
   TO authenticated
   USING (true)
   WITH CHECK (true);
+
+-- 13. Statistiques légères : visites de pages et pièces consultées
+-- (20260917_analytics_events.sql)
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type   text        NOT NULL CHECK (event_type IN ('page_view', 'product_view')),
+  path         text,
+  product_id   uuid,
+  product_title text,
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS analytics_events_created_at_idx ON analytics_events (created_at);
+CREATE INDEX IF NOT EXISTS analytics_events_type_idx ON analytics_events (event_type);
+
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public insert analytics events" ON analytics_events;
+CREATE POLICY "Public insert analytics events"
+  ON analytics_events FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin read analytics events" ON analytics_events;
+CREATE POLICY "Admin read analytics events"
+  ON analytics_events FOR SELECT USING (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Admin delete analytics events" ON analytics_events;
+CREATE POLICY "Admin delete analytics events"
+  ON analytics_events FOR DELETE USING (auth.role() = 'authenticated');

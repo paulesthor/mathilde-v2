@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import MinimalNavbar from './components/Layout/MinimalNavbar';
 import FullScreenMenu from './components/Layout/FullScreenMenu';
@@ -16,6 +16,7 @@ import AdminProducts from './pages/AdminProducts';
 import AdminOrders from './pages/AdminOrders';
 import AdminContacts from './pages/AdminContacts';
 import AdminSettings from './pages/AdminSettings';
+import AdminStats from './pages/AdminStats';
 import Login from './pages/Login';
 import Legal from './pages/Legal';
 import Success from './pages/Success';
@@ -25,6 +26,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { ToastProvider } from './contexts/ToastContext';
 import { EditModeProvider } from './contexts/EditModeContext';
 import EditModeToggle from './components/Editable/EditModeToggle';
+import { trackPageView } from './utils/trackEvent';
 
 // Placeholder Pages
 
@@ -42,6 +44,14 @@ function AppContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const isAdminPanel = isAdminPanelPath(location.pathname);
+
+  // Compte les visites des pages publiques uniquement (exclut /admin/*, y
+  // compris /admin/login) pour ne pas fausser les statistiques avec l'usage
+  // de l'admin elle-même.
+  useEffect(() => {
+    if (location.pathname.startsWith('/admin')) return;
+    trackPageView(location.pathname);
+  }, [location.pathname]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -72,6 +82,7 @@ function AppContent() {
           <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
           <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+          <Route path="/admin/stats" element={<ProtectedRoute><AdminStats /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

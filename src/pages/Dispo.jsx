@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabaseClient';
 import MinimalModal from '../components/UI/MinimalModal';
+import { trackProductView } from '../utils/trackEvent';
 
 const DEFAULT_PRODUCTS = [
     {
@@ -82,6 +83,11 @@ export default function Dispo() {
         fetchAvailableProducts();
     }, []);
 
+    const handleSelectItem = (item) => {
+        setSelectedItem(item);
+        trackProductView(item);
+    };
+
     return (
         <div className="animate-in fade-in duration-1000 bg-background pt-32 pb-24 text-foreground">
             <Helmet>
@@ -128,7 +134,7 @@ export default function Dispo() {
                                 <div
                                     key={item.id}
                                     className={`group cursor-pointer flex flex-col ${staggerClass}`}
-                                    onClick={() => setSelectedItem(item)}
+                                    onClick={() => handleSelectItem(item)}
                                 >
                                     <div className="overflow-hidden mb-8 bg-muted relative">
                                         <img
