@@ -6,6 +6,7 @@ on:
 jobs:
   mobile-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Installer Playwright (chromium)
         run: |
@@ -58,27 +59,28 @@ jobs:
 
             const firstCard = page.locator('.group.cursor-pointer').first();
             await firstCard.waitFor({ state: 'visible', timeout: 15000 });
-            const cardTitle = (await firstCard.locator('h3').textContent()).trim();
-            console.log('--- Titre de la piece ciblee :', cardTitle, '---');
+            const outerHtml = await firstCard.evaluate((el) => el.outerHTML);
+            console.log('--- HTML de la premiere carte ---');
+            console.log(outerHtml);
             const box = await firstCard.boundingBox();
             console.log('--- Bounding box de la carte :', JSON.stringify(box), '---');
 
             console.log('--- Tap sur la piece ---');
-            await firstCard.tap();
+            await firstCard.tap({ timeout: 10000 });
             await page.waitForTimeout(2000);
-            const modalOpenAfterTap = await page.locator('h2', { hasText: cardTitle }).count();
-            console.log('--- Modale ouverte apres TAP (h2 avec le titre trouve) :', modalOpenAfterTap, '---');
+            const modalOpenAfterTap = await page.locator('div.z-\\[100\\]').count();
+            console.log('--- Modale ouverte apres TAP :', modalOpenAfterTap, '---');
 
             // Referme si ouverte, pour repartir d un etat propre avant le test .click()
             if (modalOpenAfterTap > 0) {
-              await page.locator('button[aria-label], button:has(svg)').first().click({ force: true }).catch(() => {});
+              await page.locator('div.z-\\[100\\] button').first().click({ force: true, timeout: 5000 }).catch((e) => console.log('close click failed:', e.message));
               await page.waitForTimeout(500);
             }
 
             console.log('--- Clic souris classique sur la piece (comparaison) ---');
-            await firstCard.click();
+            await firstCard.click({ timeout: 10000 });
             await page.waitForTimeout(2000);
-            const modalOpenAfterClick = await page.locator('h2', { hasText: cardTitle }).count();
+            const modalOpenAfterClick = await page.locator('div.z-\\[100\\]').count();
             console.log('--- Modale ouverte apres CLICK :', modalOpenAfterClick, '---');
 
             console.log('=== REQUETES analytics_events capturees ===');
