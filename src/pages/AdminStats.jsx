@@ -182,10 +182,6 @@ export default function AdminStats() {
                         rows={stats.topPages}
                         emptyLabel="Pas encore de données de visite."
                     />
-
-                    <p className="font-mono text-[10px] text-muted-foreground text-center pt-2">
-                        Statistique maison, légère : nombre de vues brutes (pas de visiteurs uniques).
-                    </p>
                 </div>
             )}
         </AdminLayout>
