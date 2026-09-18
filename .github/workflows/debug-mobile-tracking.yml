@@ -42,6 +42,8 @@ jobs:
                 responses.push({ status: res.status(), url: res.url(), body });
               }
             });
+            page.on('console', (msg) => console.log('[console.' + msg.type() + ']', msg.text()));
+            page.on('pageerror', (err) => console.log('[pageerror]', err.message));
 
             console.log('--- Chargement de la page d accueil (mobile) ---');
             await page.goto('https://paulesthor.github.io/mathilde-v2/', { waitUntil: 'networkidle', timeout: 30000 });
@@ -51,11 +53,33 @@ jobs:
             await page.goto('https://paulesthor.github.io/mathilde-v2/#/dispo', { waitUntil: 'networkidle', timeout: 30000 });
             await page.waitForTimeout(1500);
 
-            console.log('--- Clic sur la premiere piece disponible ---');
+            const cardCount = await page.locator('.group.cursor-pointer').count();
+            console.log('--- Nombre de cartes piece trouvees :', cardCount, '---');
+
             const firstCard = page.locator('.group.cursor-pointer').first();
             await firstCard.waitFor({ state: 'visible', timeout: 15000 });
+            const cardTitle = (await firstCard.locator('h3').textContent()).trim();
+            console.log('--- Titre de la piece ciblee :', cardTitle, '---');
+            const box = await firstCard.boundingBox();
+            console.log('--- Bounding box de la carte :', JSON.stringify(box), '---');
+
+            console.log('--- Tap sur la piece ---');
             await firstCard.tap();
-            await page.waitForTimeout(3000);
+            await page.waitForTimeout(2000);
+            const modalOpenAfterTap = await page.locator('h2', { hasText: cardTitle }).count();
+            console.log('--- Modale ouverte apres TAP (h2 avec le titre trouve) :', modalOpenAfterTap, '---');
+
+            // Referme si ouverte, pour repartir d un etat propre avant le test .click()
+            if (modalOpenAfterTap > 0) {
+              await page.locator('button[aria-label], button:has(svg)').first().click({ force: true }).catch(() => {});
+              await page.waitForTimeout(500);
+            }
+
+            console.log('--- Clic souris classique sur la piece (comparaison) ---');
+            await firstCard.click();
+            await page.waitForTimeout(2000);
+            const modalOpenAfterClick = await page.locator('h2', { hasText: cardTitle }).count();
+            console.log('--- Modale ouverte apres CLICK :', modalOpenAfterClick, '---');
 
             console.log('=== REQUETES analytics_events capturees ===');
             console.log(JSON.stringify(requests, null, 2));
