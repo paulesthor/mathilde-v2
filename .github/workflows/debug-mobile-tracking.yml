@@ -1,0 +1,70 @@
+name: Debug - Test tracking mobile en conditions reelles
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mobile-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Installer Playwright (chromium)
+        run: |
+          npm init -y > /dev/null 2>&1
+          npm install playwright@latest > /dev/null 2>&1
+          npx playwright install --with-deps chromium
+
+      - name: Simuler la navigation mobile (iPhone) sur le site en ligne
+        run: |
+          cat > test.js << 'EOF'
+          const { devices, chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch();
+            const context = await browser.newContext({ ...devices['iPhone 13'] });
+            const page = await context.newPage();
+
+            const requests = [];
+            page.on('request', (req) => {
+              if (req.url().includes('analytics_events')) {
+                requests.push({ method: req.method(), url: req.url(), headers: req.headers(), postData: req.postData() });
+              }
+            });
+            const failures = [];
+            page.on('requestfailed', (req) => {
+              if (req.url().includes('analytics_events')) {
+                failures.push({ url: req.url(), failure: req.failure() });
+              }
+            });
+            const responses = [];
+            page.on('response', async (res) => {
+              if (res.url().includes('analytics_events')) {
+                let body = '';
+                try { body = await res.text(); } catch (e) {}
+                responses.push({ status: res.status(), url: res.url(), body });
+              }
+            });
+
+            console.log('--- Chargement de la page d accueil (mobile) ---');
+            await page.goto('https://paulesthor.github.io/mathilde-v2/', { waitUntil: 'networkidle', timeout: 30000 });
+            await page.waitForTimeout(1500);
+
+            console.log('--- Navigation vers /dispo ---');
+            await page.goto('https://paulesthor.github.io/mathilde-v2/#/dispo', { waitUntil: 'networkidle', timeout: 30000 });
+            await page.waitForTimeout(1500);
+
+            console.log('--- Clic sur la premiere piece disponible ---');
+            const firstCard = page.locator('.group.cursor-pointer').first();
+            await firstCard.waitFor({ state: 'visible', timeout: 15000 });
+            await firstCard.tap();
+            await page.waitForTimeout(3000);
+
+            console.log('=== REQUETES analytics_events capturees ===');
+            console.log(JSON.stringify(requests, null, 2));
+            console.log('=== ECHECS DE REQUETE ===');
+            console.log(JSON.stringify(failures, null, 2));
+            console.log('=== REPONSES ===');
+            console.log(JSON.stringify(responses, null, 2));
+
+            await browser.close();
+          })();
+          EOF
+          node test.js

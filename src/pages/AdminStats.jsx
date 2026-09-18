@@ -411,7 +411,9 @@ export default function AdminStats() {
                             <KpiCard icon={Package} label="Valeur du stock" value={EUR.format(stats.stockValue)} sub="Pièces disponibles" />
                             <KpiCard icon={Star} label="Avis en attente" value={counts.reviews} to="/admin/reviews" />
                         </div>
-                        <KpiCard icon={MessageSquare} label="Demandes de contact non traitées" value={counts.contacts} to="/admin/contacts" />
+                        <div className="mt-3">
+                            <KpiCard icon={MessageSquare} label="Demandes de contact non traitées" value={counts.contacts} to="/admin/contacts" />
+                        </div>
 
                         <Sparkline
                             title="Chiffre d'affaires dans le temps"
