@@ -1,0 +1,40 @@
+name: Debug - Test de la table analytics_events
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-direct:
+    runs-on: ubuntu-latest
+    env:
+      SUPA_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+    steps:
+      - name: 1. INSERT anonyme page_view (doit reussir)
+        run: |
+          curl -sS -w "\nHTTP_STATUS:%{http_code}\n" --max-time 15 -X POST "$SUPA_URL/rest/v1/analytics_events" \
+            -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY" -H "Content-Type: application/json" -H "Prefer: return=representation" \
+            -d '{"event_type":"page_view","path":"TEST-STATS-DELETE-ME"}'
+
+      - name: 2. INSERT anonyme product_view (doit reussir)
+        run: |
+          curl -sS -w "\nHTTP_STATUS:%{http_code}\n" --max-time 15 -X POST "$SUPA_URL/rest/v1/analytics_events" \
+            -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY" -H "Content-Type: application/json" -H "Prefer: return=representation" \
+            -d '{"event_type":"product_view","product_id":"00000000-0000-0000-0000-000000000000","product_title":"TEST-STATS-DELETE-ME"}'
+
+      - name: 3. INSERT event_type invalide (doit echouer - contrainte CHECK)
+        run: |
+          curl -sS -w "\nHTTP_STATUS:%{http_code}\n" --max-time 15 -X POST "$SUPA_URL/rest/v1/analytics_events" \
+            -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY" -H "Content-Type: application/json" \
+            -d '{"event_type":"faux_type","path":"TEST-STATS-DELETE-ME"}'
+
+      - name: 4. SELECT anonyme (doit etre vide - RLS reserve la lecture aux comptes connectes)
+        run: |
+          curl -sS -w "\nHTTP_STATUS:%{http_code}\n" --max-time 15 \
+            "$SUPA_URL/rest/v1/analytics_events?path=eq.TEST-STATS-DELETE-ME" \
+            -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY"
+
+      - name: 5. DELETE anonyme (doit etre bloque - RLS reserve la suppression aux comptes connectes)
+        run: |
+          curl -sS -w "\nHTTP_STATUS:%{http_code}\n" --max-time 15 -X DELETE "$SUPA_URL/rest/v1/analytics_events?path=eq.TEST-STATS-DELETE-ME" \
+            -H "apikey: $ANON_KEY" -H "Authorization: Bearer $ANON_KEY"
