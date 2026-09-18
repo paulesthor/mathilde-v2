@@ -54,10 +54,10 @@ jobs:
             await page.goto('https://paulesthor.github.io/mathilde-v2/#/dispo', { waitUntil: 'networkidle', timeout: 30000 });
             await page.waitForTimeout(1500);
 
-            const cardCount = await page.locator('.group.cursor-pointer').count();
-            console.log('--- Nombre de cartes piece trouvees :', cardCount, '---');
+            const cardCount = await page.locator('main .group.cursor-pointer').count();
+            console.log('--- Nombre de cartes piece trouvees (dans main) :', cardCount, '---');
 
-            const firstCard = page.locator('.group.cursor-pointer').first();
+            const firstCard = page.locator('main .group.cursor-pointer').first();
             await firstCard.waitFor({ state: 'visible', timeout: 15000 });
             const outerHtml = await firstCard.evaluate((el) => el.outerHTML);
             console.log('--- HTML de la premiere carte ---');
@@ -71,14 +71,14 @@ jobs:
             const modalOpenAfterTap = await page.locator('div.z-\\[100\\]').count();
             console.log('--- Modale ouverte apres TAP :', modalOpenAfterTap, '---');
 
-            // Referme si ouverte, pour repartir d un etat propre avant le test .click()
-            if (modalOpenAfterTap > 0) {
-              await page.locator('div.z-\\[100\\] button').first().click({ force: true, timeout: 5000 }).catch((e) => console.log('close click failed:', e.message));
-              await page.waitForTimeout(500);
-            }
+            console.log('--- Rechargement propre avant le test .click() ---');
+            await page.goto('https://paulesthor.github.io/mathilde-v2/#/dispo', { waitUntil: 'networkidle', timeout: 30000 });
+            await page.waitForTimeout(1500);
+            const firstCard2 = page.locator('main .group.cursor-pointer').first();
+            await firstCard2.waitFor({ state: 'visible', timeout: 15000 });
 
             console.log('--- Clic souris classique sur la piece (comparaison) ---');
-            await firstCard.click({ timeout: 10000 });
+            await firstCard2.click({ timeout: 10000 });
             await page.waitForTimeout(2000);
             const modalOpenAfterClick = await page.locator('div.z-\\[100\\]').count();
             console.log('--- Modale ouverte apres CLICK :', modalOpenAfterClick, '---');
