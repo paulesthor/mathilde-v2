@@ -330,3 +330,28 @@ CREATE POLICY "Admin read analytics events"
 DROP POLICY IF EXISTS "Admin delete analytics events" ON analytics_events;
 CREATE POLICY "Admin delete analytics events"
   ON analytics_events FOR DELETE USING (auth.role() = 'authenticated');
+
+-- 14. Droits d'accès Data API explicites (20260923_data_api_grants.sql)
+-- Anticipe la fin de l'auto-grant Supabase sur les nouvelles tables
+-- (annoncée pour le 30/10/2026) : sans ces GRANT, une table créée par ce
+-- script sur un projet neuf (ou un "supabase db reset") serait injoignable
+-- via l'API REST, même avec des policies RLS correctes. Droits calqués sur
+-- ce que permettent déjà les policies de chaque table.
+GRANT SELECT ON public.orders TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.orders TO service_role;
+
+GRANT INSERT ON public.contact_requests TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.contact_requests TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.contact_requests TO service_role;
+
+GRANT INSERT ON public.push_subscriptions TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.push_subscriptions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.push_subscriptions TO service_role;
+
+GRANT SELECT ON public.site_content TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.site_content TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.site_content TO service_role;
+
+GRANT INSERT ON public.analytics_events TO anon;
+GRANT SELECT, INSERT, DELETE ON public.analytics_events TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.analytics_events TO service_role;
