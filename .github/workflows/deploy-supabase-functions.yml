@@ -20,7 +20,7 @@ jobs:
         run: |
           SQL_JSON=$(jq -Rs . < supabase/deploy_all.sql)
           RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST \
-            "https://api.supabase.com/v1/projects/dekmujrzeverlmnzjzbh/database/query" \
+            "https://api.supabase.com/v1/projects/moanidwnrcynoedfrmah/database/query" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"query\": $SQL_JSON}")
@@ -42,7 +42,7 @@ jobs:
       # requête avant même qu'elle atteigne notre code. La sécurité y est déjà
       # assurée autrement, par la vérification de signature Stripe dans le code.
       - name: Deploy stripe-webhook (sans vérification JWT)
-        run: supabase functions deploy stripe-webhook --project-ref dekmujrzeverlmnzjzbh --no-verify-jwt
+        run: supabase functions deploy stripe-webhook --project-ref moanidwnrcynoedfrmah --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
@@ -50,7 +50,7 @@ jobs:
         run: |
           for fn in create-stripe-link get-checkout-session send-contact-email send-push submit-review update-product; do
             echo "=== Deploying $fn ==="
-            supabase functions deploy "$fn" --project-ref dekmujrzeverlmnzjzbh
+            supabase functions deploy "$fn" --project-ref moanidwnrcynoedfrmah
           done
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
